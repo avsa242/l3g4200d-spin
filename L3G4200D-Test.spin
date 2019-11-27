@@ -1,8 +1,8 @@
 {
     --------------------------------------------
     Filename: L3G4200D-Test.spin
-    Author:
-    Description:
+    Author: Jesse Burt
+    Description: Test app for the L3G4200D driver
     Copyright (c) 2019
     Started Nov 27, 2019
     Updated Nov 27, 2019
@@ -12,8 +12,8 @@
 
 CON
 
-    _clkmode = cfg#_clkmode
-    _xinfreq = cfg#_xinfreq
+    _clkmode    = cfg#_clkmode
+    _xinfreq    = cfg#_xinfreq
 
     LED         = cfg#LED1
     CS_PIN      = 3

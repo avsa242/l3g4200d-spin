@@ -37,7 +37,6 @@ PUB Start(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN) : okay
 PUB Startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN, SCK_DELAY, SCK_CPOL): okay
     if SCK_DELAY => 1 and lookdown(SCK_CPOL: 0, 1)
         if okay := spi.start (SCK_DELAY, SCK_CPOL)              'SPI Object Started?
-            time.MSleep (5)
             _CS := CS_PIN
             _MOSI := MOSI_PIN
             _MISO := MISO_PIN
@@ -45,8 +44,10 @@ PUB Startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN, SCK_DELAY, SCK_CPOL): okay
 
             io.High (_CS)
             io.Output (_CS)
+            time.MSleep (10)
 
-            return okay
+            if DeviceID == $D3
+                return okay
 
     return FALSE                                                'If we got here, something went wrong
 
@@ -54,21 +55,74 @@ PUB Stop
 
     spi.stop
 
-PUB DeviceID
+PUB DataOverflowed
+' Indicates previously acquired data has been overwritten
+'   Returns: TRUE (-1) if data has overflowed/been overwritten, FALSE otherwise
+    result := $00
+    readReg(core#STATUS_REG, 1, @result)
+    result := (result >> core#FLD_ZYXOR) & %1
+    result := result * TRUE
 
+PUB DataReady | tmp
+' Indicates data is ready
+'   Returns: TRUE (-1) if data ready, FALSE otherwise
+    tmp := $00
+    readReg(core#STATUS_REG, 1, @tmp)
+    tmp := (tmp >> core#FLD_ZYXDA) & %1
+    return tmp == 1
+
+PUB DeviceID
+' Read Device ID (who am I)
+'   Known values: $D3
     result := $00
     readReg(core#WHO_AM_I, 1, @result)
+
+PUB GyroData(ptr_x, ptr_y, ptr_z) | tmp[2]
+' Read gyroscope data
+    bytefill(@tmp, $00, 8)
+    readReg(core#OUT_X_L, 6, @tmp)
+
+    long[ptr_x] := ~~tmp.word[0]
+    long[ptr_y] := ~~tmp.word[1]
+    long[ptr_z] := ~~tmp.word[2]
+
+PUB OpMode(mode) | tmp
+' Set operation mode
+'   Valid values:
+'       POWERDOWN (0): Power down - lowest power state
+'       SLEEP (1): Sleep - sensor enabled, but X, Y, Z outputs disabled
+'       NORMAL (2): Normal - active operating state
+'   Any other value polls the chip and returns the current setting
+    tmp := $00
+    readReg(core#CTRL_REG1, 1, @tmp)
+    case mode
+        POWERDOWN:
+            mode &= core#MASK_PD
+        SLEEP:
+            mode |= (1 << core#FLD_PD)
+            mode &= core#MASK_XYZEN
+        NORMAL:
+            mode |= (1 << core#FLD_PD)
+        OTHER:
+            result := (tmp >> core#FLD_PD) & %1
+            return
+
+    tmp := (tmp | mode)
+    writeReg(core#CTRL_REG1, 1, @tmp)
 
 PRI readReg(reg, nr_bytes, buff_addr) | tmp
 ' Read nr_bytes from register 'reg' to address 'buff_addr'
 
 ' Handle quirky registers on a case-by-case basis
     case reg
-        $0F, $20..$38:
+        $0F, $20..$27, $2E..$38:
+        $28..$2D:
+            reg |= MS
         OTHER:
             return FALSE
+    reg |= R
     io.Low (_CS)
-    spi.SHIFTOUT(_MOSI, _SCK, core#MOSI_BITORDER, 8, reg | R)
+    spi.SHIFTOUT(_MOSI, _SCK, core#MOSI_BITORDER, 8, reg)
 
     repeat tmp from 0 to nr_bytes-1
         byte[buff_addr][tmp] := spi.SHIFTIN(_MISO, _SCK, core#MISO_BITORDER, 8)

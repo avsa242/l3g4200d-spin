@@ -1,27 +1,27 @@
 # l3g4200d-spin 
---------------
+---------------
 
-This is a P8X32A/Propeller [driver] object for ____.
+This is a P8X32A/Propeller driver object for the STMicroelectronics L3G2400D 3DoF Gyroscope
 
 ## Salient Features
 
-* Feature 1
-* Feature 2
+* SPI connection at up to 1MHz
+* Read device ID (who am i)
+* Read Gyroscope data
+* Read flags for data ready or overflowed
+* Set operation mode (powerdown, sleep, normal/active)
 
 ## Requirements
 
-* Requirement 1
+* P1/SPIN1: 1 extra core/cog for the PASM SPI driver
 
 ## Compiler Compatibility
 
-* OpenSpin (tested with 1.00.81)
+* P1/SPIN1: OpenSpin (tested with 1.00.81)
 
 ## Limitations
 
 * Very early in development - may malfunction, or outright fail to build
-* Limitation 2
 
 ## TODO
 
-- [ ] Task item 1
-- [ ] Task item 2
