@@ -16,6 +16,12 @@ CON
     R           = 1 << 7                                            ' ORd with reg # to indicate a read transaction
     MS          = 1 << 6                                            ' ORd with reg # to indicate auto address increment (multi-byte transfers)
 
+' High-pass filter modes
+    #0, HPF_NORMAL_RES, HPF_REF, HPF_NORMAL, HPF_AUTO_RES
+
+' Operation modes
+    #0, POWERDOWN, SLEEP, NORMAL
+
 VAR
 
     byte _CS, _MOSI, _MISO, _SCK
@@ -86,6 +92,72 @@ PUB GyroData(ptr_x, ptr_y, ptr_z) | tmp[2]
     long[ptr_y] := ~~tmp.word[1]
     long[ptr_z] := ~~tmp.word[2]
 
+PUB HighPassFilterFreq(freq) | tmp
+' Set high-pass filter frequency
+    tmp := $00
+    readReg(core#CTRL_REG2, 1, @tmp)
+    case OutputDataRate(-2)
+        100:
+            case freq
+                8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01:
+                    freq := lookdownz(freq: 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01) << core#FLD_HPCF
+                OTHER:
+                    tmp := (tmp >> core#FLD_HPCF) & core#BITS_HPCF
+                    result := lookupz(tmp: 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01)
+                    return
+
+        200:
+            case freq
+                15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02:
+                    freq := lookdownz(freq: 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02) << core#FLD_HPCF
+                OTHER:
+                    tmp := (tmp >> core#FLD_HPCF) & core#BITS_HPCF
+                    result := lookupz(tmp: 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02)
+                    return
+
+        400:
+            case freq
+                30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05:
+                    freq := lookdownz(freq: 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05) << core#FLD_HPCF
+                OTHER:
+                    tmp := (tmp >> core#FLD_HPCF) & core#BITS_HPCF
+                    result := lookupz(tmp: 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05)
+                    return
+
+        800:
+            case freq
+                56_00, 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10:
+                    freq := lookdownz(freq: 56_00, 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10) << core#FLD_HPCF
+                OTHER:
+                    tmp := (tmp >> core#FLD_HPCF) & core#BITS_HPCF
+                    result := lookupz(tmp: 56_00, 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10)
+                    return
+
+    tmp &= core#MASK_HPCF
+    tmp := (tmp | freq)
+    writeReg(core#CTRL_REG2, 1, @tmp)
+
+PUB HighPassFilterMode(mode) | tmp
+' Set data output high pass filter mode
+'   Valid values:
+'       HPF_NORMAL_RES (0): Normal mode (reset reading HP_RESET_FILTER) XXX - clarify/expand
+'       HPF_REF (1): Reference signal for filtering
+'       HPF_NORMAL (2): Normal
+'       HPF_AUTO_RES (3): Autoreset on interrupt
+'   Any other value polls the chip and returns the current setting
+    tmp := $00
+    readReg(core#CTRL_REG2, 1, @tmp)
+    case mode
+        HPF_NORMAL_RES, HPF_REF, HPF_NORMAL, HPF_AUTO_RES:
+            mode <<= core#FLD_HPM
+        OTHER:
+            result := (tmp >> core#FLD_HPM) & core#BITS_HPM
+            return
+
+    tmp &= core#MASK_HPM
+    tmp := (tmp | mode)
+    writeReg(core#CTRL_REG2, 1, @tmp)
+
 PUB OpMode(mode) | tmp
 ' Set operation mode
 '   Valid values:
@@ -97,17 +169,36 @@ PUB OpMode(mode) | tmp
     readReg(core#CTRL_REG1, 1, @tmp)
     case mode
         POWERDOWN:
-            mode &= core#MASK_PD
+            tmp &= core#MASK_PD
         SLEEP:
-            mode |= (1 << core#FLD_PD)
-            mode &= core#MASK_XYZEN
+            mode := (1 << core#FLD_PD)
+            tmp &= core#MASK_XYZEN
         NORMAL:
-            mode |= (1 << core#FLD_PD)
+            mode := (1 << core#FLD_PD)
+            tmp &= core#MASK_PD
         OTHER:
             result := (tmp >> core#FLD_PD) & %1
             return
 
     tmp := (tmp | mode)
+    writeReg(core#CTRL_REG1, 1, @tmp)
+
+PUB OutputDataRate(Hz) | tmp
+' Set rate of data output, in Hz
+'   Valid values: 100, 200, 400, 800
+'   Any other value polls the chip and returns the current setting
+    tmp := $00
+    readReg(core#CTRL_REG1, 1, @tmp)
+    case Hz
+        100, 200, 400, 800:
+            Hz := lookdownz(Hz: 100, 200, 400, 800) << core#FLD_DR
+        OTHER:
+            tmp := (tmp >> core#FLD_DR) & core#BITS_DR
+            result := lookupz(tmp: 100, 200, 400, 800)
+            return
+
+    tmp &= core#MASK_DR
+    tmp := (tmp | Hz)
     writeReg(core#CTRL_REG1, 1, @tmp)
 
 PRI readReg(reg, nr_bytes, buff_addr) | tmp

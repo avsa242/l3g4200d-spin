@@ -15,6 +15,11 @@ CON
     _clkmode    = cfg#_clkmode
     _xinfreq    = cfg#_xinfreq
 
+    COL_REG     = 0
+    COL_SET     = 12
+    COL_READ    = 24
+    COL_PF      = 40
+
     LED         = cfg#LED1
     CS_PIN      = 3
     SCL_PIN     = 2
@@ -31,15 +36,162 @@ OBJ
 
 VAR
 
-    byte _ser_cog
+    long _fails, _expanded
+    byte _ser_cog, _row
 
 PUB Main
 
     Setup
-    ser.Str (string("Device ID: "))
-    ser.Hex (gyro.DeviceID, 8)
+    _expanded := FALSE
 
+    _row := 3
+    ser.Position (0, _row)
+
+    HPCF(1)
+    HPM(1)
+    OPMODE(1)
+    DR(1)
     FlashLED (LED, 100)
+
+PUB HPCF(reps) | tmp, read
+
+    gyro.OutputDataRate (100)
+    _row++
+    repeat reps
+        repeat tmp from 0 to 8
+            gyro.HighPassFilterFreq (lookupz(tmp: 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01))
+            read := gyro.HighPassFilterFreq (-2)
+            Message (string("HPCF"), lookupz(tmp: 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01), read)
+
+    gyro.OutputDataRate (200)
+    _row++
+    repeat reps
+        repeat tmp from 0 to 8
+            gyro.HighPassFilterFreq (lookupz(tmp: 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02))
+            read := gyro.HighPassFilterFreq (-2)
+            Message (string("HPCF"), lookupz(tmp: 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02), read)
+
+    gyro.OutputDataRate (400)
+    _row++
+    repeat reps
+        repeat tmp from 0 to 8
+            gyro.HighPassFilterFreq (lookupz(tmp: 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05))
+            read := gyro.HighPassFilterFreq (-2)
+            Message (string("HPCF"), lookupz(tmp: 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05), read)
+
+    gyro.OutputDataRate (800)
+    _row++
+    repeat reps
+        repeat tmp from 0 to 8
+            gyro.HighPassFilterFreq (lookupz(tmp: 56_00, 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10))
+            read := gyro.HighPassFilterFreq (-2)
+            Message (string("HPCF"), lookupz(tmp: 56_00, 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10), read)
+
+PUB HPM(reps) | tmp, read
+
+    _row++
+    repeat reps
+        repeat tmp from 0 to 3
+            gyro.HighPassFilterMode (tmp)
+            read := gyro.HighPassFilterMode (-2)
+            Message (string("HPM"), tmp, read)
+
+PUB OPMODE(reps) | tmp, read
+
+    _row++
+    repeat reps
+        repeat tmp from 0 to 2
+            gyro.OpMode (tmp)
+            read := gyro.OpMode (-2)
+            Message (string("OPMODE"), tmp, read)
+
+PUB DR(reps) | tmp, read
+
+    _row++
+    repeat reps
+        repeat tmp from 0 to 3
+            gyro.OutputDataRate (lookupz(tmp: 100, 200, 400, 800))
+            read := gyro.OutputDataRate (-2)
+            Message (string("DR"), lookupz(tmp: 100, 200, 400, 800), read)
+
+{
+PUB RF_PWR(reps) | tmp, read
+
+    _row++
+    repeat reps
+        repeat tmp from -18 to 0 step 6
+            nrf24.RFPower (tmp)
+            read := nrf24.RFPower (-2)
+            Message (string("RF_PWR"), tmp, read)
+
+PUB RF_DR(reps) | tmp, read
+
+    _row++
+    repeat reps
+        repeat tmp from 0 to 2
+            nrf24.Rate (lookupz(tmp: 250, 1000, 2000))
+            read := nrf24.Rate (-2)
+            Message (string("RF_DR"), lookupz(tmp: 250, 1000, 2000), read)
+
+PUB EN_ACK_PAY(reps) | tmp, read
+
+    _row++
+    repeat reps
+        repeat tmp from 0 to -1
+            nrf24.EnableACK (tmp)
+            read := nrf24.EnableACK (-2)
+            Message (string("EN_ACK_PAY"), tmp, read)
+}
+PUB TrueFalse(num)
+
+    case num
+        0: ser.Str (string("FALSE"))
+        -1: ser.Str (string("TRUE"))
+        OTHER: ser.Str (string("???"))
+
+PUB Message(field, arg1, arg2)
+
+   case _expanded
+        TRUE:
+            ser.PositionX (COL_REG)
+            ser.Str (field)
+
+            ser.PositionX (COL_SET)
+            ser.Str (string("SET: "))
+            ser.Dec (arg1)
+
+            ser.PositionX (COL_READ)
+            ser.Str (string("READ: "))
+            ser.Dec (arg2)
+            ser.Chars (32, 3)
+            ser.PositionX (COL_PF)
+            PassFail (arg1 == arg2)
+            ser.NewLine
+
+        FALSE:
+            ser.Position (COL_REG, _row)
+            ser.Str (field)
+
+            ser.Position (COL_SET, _row)
+            ser.Str (string("SET: "))
+            ser.Dec (arg1)
+
+            ser.Position (COL_READ, _row)
+            ser.Str (string("READ: "))
+            ser.Dec (arg2)
+
+            ser.Position (COL_PF, _row)
+            PassFail (arg1 == arg2)
+            ser.NewLine
+        OTHER:
+            ser.Str (string("DEADBEEF"))
+
+PUB PassFail(num)
+
+    case num
+        0: ser.Str (string("FAIL"))
+        -1: ser.Str (string("PASS"))
+        OTHER: ser.Str (string("???"))
 
 PUB Setup
 

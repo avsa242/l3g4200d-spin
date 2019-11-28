@@ -10,6 +10,8 @@ This is a P8X32A/Propeller driver object for the STMicroelectronics L3G2400D 3Do
 * Read Gyroscope data
 * Read flags for data ready or overflowed
 * Set operation mode (powerdown, sleep, normal/active)
+* Set output data rate
+* Set high-pass filter freq for ODR, configure high-pass filter mode
 
 ## Requirements
 
@@ -24,4 +26,4 @@ This is a P8X32A/Propeller driver object for the STMicroelectronics L3G2400D 3Do
 * Very early in development - may malfunction, or outright fail to build
 
 ## TODO
-
+- [ ] High-pass filter mode operation needs clarification on function/purpose

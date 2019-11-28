@@ -47,6 +47,8 @@ CON
         FLD_HPCF                = 0
         BITS_HPM                = %11
         BITS_HPCF               = %1111
+        MASK_HPM                = CTRL_REG2_MASK ^ (BITS_HPM << FLD_HPM)
+        MASK_HPCF               = CTRL_REG2_MASK ^ (BITS_HPCF << FLD_HPCF)
 
     CTRL_REG3                   = $22
     CTRL_REG3_MASK              = $FF
