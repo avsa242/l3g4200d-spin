@@ -5,7 +5,7 @@
     Description: Low-level constants
     Copyright (c) 2019
     Started Nov 27, 2019
-    Updated Nov 27, 2019
+    Updated Nov 29, 2019
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -14,7 +14,7 @@ CON
 
 ' SPI Configuration
     CPOL                        = 1
-    CLK_DELAY                   = 10
+    CLK_DELAY                   = 1
     MOSI_BITORDER               = 5             'MSBFIRST
     MISO_BITORDER               = 2             'MSBPRE
 
@@ -55,14 +55,17 @@ CON
         FLD_I1_INT1             = 7
         FLD_I1_BOOT             = 6
         FLD_H_LACTIVE           = 5
+        FLD_INT1                = 5
         FLD_PP_OD               = 4
         FLD_I2_DRDY             = 3
         FLD_I2_WTM              = 2
         FLD_I2_ORUN             = 1
         FLD_I2_EMPTY            = 0
+        BITS_INT1               = %111
         MASK_I1_INT1            = CTRL_REG3_MASK ^ (1 << FLD_I1_INT1)
         MASK_I1_BOOT            = CTRL_REG3_MASK ^ (1 << FLD_I1_BOOT)
         MASK_H_LACTIVE          = CTRL_REG3_MASK ^ (1 << FLD_H_LACTIVE)
+        MASK_INT1               = CTRL_REG3_MASK ^ (BITS_INT1 << FLD_INT1)
         MASK_PP_OD              = CTRL_REG3_MASK ^ (1 << FLD_PP_OD)
         MASK_I2_DRDY            = CTRL_REG3_MASK ^ (1 << FLD_I2_DRDY)
         MASK_I2_WTM             = CTRL_REG3_MASK ^ (1 << FLD_I2_WTM)

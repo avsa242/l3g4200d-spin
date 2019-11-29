@@ -1,11 +1,11 @@
-{
+P{
     --------------------------------------------
     Filename: L3G4200D-Test.spin
     Author: Jesse Burt
     Description: Test app for the L3G4200D driver
     Copyright (c) 2019
     Started Nov 27, 2019
-    Updated Nov 27, 2019
+    Updated Nov 29, 2019
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -47,11 +47,31 @@ PUB Main
     _row := 3
     ser.Position (0, _row)
 
+    FS(1)
+    INT1(1)
     HPCF(1)
     HPM(1)
     OPMODE(1)
     DR(1)
     FlashLED (LED, 100)
+
+PUB FS(reps) | tmp, read
+
+    _row++
+    repeat reps
+        repeat tmp from 0 to 2
+            gyro.GyroScale (lookupz(tmp: 250, 500, 2000))
+            read := gyro.GyroScale (-2)
+            Message (string("FS"), lookupz(tmp: 250, 500, 2000), read)
+
+PUB INT1(reps) | tmp, read
+
+    _row++
+    repeat reps
+        repeat tmp from %000 to %111
+            gyro.Int1Mask (tmp)
+            read := gyro.Int1Mask (-2)
+            Message (string("INT1"), tmp, read)
 
 PUB HPCF(reps) | tmp, read
 

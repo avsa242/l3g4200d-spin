@@ -5,7 +5,7 @@
     Description:
     Copyright (c) 2019
     Started Nov 27, 2019
-    Updated Nov 27, 2019
+    Updated Nov 29, 2019
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -24,6 +24,7 @@ CON
 
 VAR
 
+    long _gyro_cnts_per_lsb
     byte _CS, _MOSI, _MISO, _SCK
 
 OBJ
@@ -52,7 +53,7 @@ PUB Startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN, SCK_DELAY, SCK_CPOL): okay
             io.Output (_CS)
             time.MSleep (10)
 
-            if DeviceID == $D3
+            if DeviceID == $D3                                  'Is this actually an L3G4200D?
                 return okay
 
     return FALSE                                                'If we got here, something went wrong
@@ -60,6 +61,10 @@ PUB Startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN, SCK_DELAY, SCK_CPOL): okay
 PUB Stop
 
     spi.stop
+
+PUB Defaults
+
+    GyroScale(250)
 
 PUB DataOverflowed
 ' Indicates previously acquired data has been overwritten
@@ -91,6 +96,34 @@ PUB GyroData(ptr_x, ptr_y, ptr_z) | tmp[2]
     long[ptr_x] := ~~tmp.word[0]
     long[ptr_y] := ~~tmp.word[1]
     long[ptr_z] := ~~tmp.word[2]
+
+PUB GyroDPS(ptr_x, ptr_y, ptr_z) | tmp[2]
+' Read gyroscope data, calculated
+'   Returns: Angular rate in millionths of a degree per second
+    bytefill(@tmp, $00, 8)
+    readReg(core#OUT_X_L, 6, @tmp)
+    long[ptr_x] := (~~tmp.word[0] * _gyro_cnts_per_lsb)
+    long[ptr_y] := (~~tmp.word[1] * _gyro_cnts_per_lsb)
+    long[ptr_z] := (~~tmp.word[2] * _gyro_cnts_per_lsb)
+
+PUB GyroScale(dps) | tmp
+' Set gyro full-scale range, in degrees per second
+'   Valid values: 250, 500, 2000
+'   Any other value polls the chip and returns the current setting
+    tmp := $00
+    readReg(core#CTRL_REG4, 1, @tmp)
+    case dps
+        250, 500, 2000:
+            dps := lookdownz(dps: 250, 500, 2000) << core#FLD_FS
+            _gyro_cnts_per_lsb := lookupz(dps >> core#FLD_FS: 8_750, 17_500, 70_000)
+        OTHER:
+            tmp := (tmp >> core#FLD_FS) & core#BITS_FS
+            result := lookupz(tmp: 250, 500, 2000)
+            return
+
+    tmp &= core#MASK_FS
+    tmp := (tmp | dps)
+    writeReg(core#CTRL_REG4, 1, @tmp)
 
 PUB HighPassFilterFreq(freq) | tmp
 ' Set high-pass filter frequency
@@ -157,6 +190,28 @@ PUB HighPassFilterMode(mode) | tmp
     tmp &= core#MASK_HPM
     tmp := (tmp | mode)
     writeReg(core#CTRL_REG2, 1, @tmp)
+
+PUB Int1Mask(func_mask) | tmp
+' Set interrupt/function mask for INT1 pin
+'   Valid values:
+'       Bit 321   321
+'           |||   |||
+'    Range %000..%111
+'       Bit 3: Interrupt enable (*0: Disable, 1: Enable)
+'       Bit 2: Boot status (*0: Disable, 1: Enable)
+'       Bit 1: Interrupt active state (*0: High, 1: Low)
+    tmp := $00
+    readReg(core#CTRL_REG3, 1, @tmp)
+    case func_mask
+        %000..%111:
+            func_mask <<= core#FLD_INT1
+        OTHER:
+            result := (tmp >> core#FLD_INT1) & core#BITS_INT1
+            return
+
+    tmp &= core#MASK_INT1
+    tmp := (tmp | func_mask)
+    writeReg(core#CTRL_REG3, 1, @tmp)
 
 PUB OpMode(mode) | tmp
 ' Set operation mode
