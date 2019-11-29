@@ -54,14 +54,14 @@ CON
     CTRL_REG3_MASK              = $FF
         FLD_I1_INT1             = 7
         FLD_I1_BOOT             = 6
+        FLD_INT1                = 6
         FLD_H_LACTIVE           = 5
-        FLD_INT1                = 5
         FLD_PP_OD               = 4
         FLD_I2_DRDY             = 3
         FLD_I2_WTM              = 2
         FLD_I2_ORUN             = 1
         FLD_I2_EMPTY            = 0
-        BITS_INT1               = %111
+        BITS_INT1               = %11
         MASK_I1_INT1            = CTRL_REG3_MASK ^ (1 << FLD_I1_INT1)
         MASK_I1_BOOT            = CTRL_REG3_MASK ^ (1 << FLD_I1_BOOT)
         MASK_H_LACTIVE          = CTRL_REG3_MASK ^ (1 << FLD_H_LACTIVE)

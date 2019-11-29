@@ -22,6 +22,9 @@ CON
 ' Operation modes
     #0, POWERDOWN, SLEEP, NORMAL
 
+' Interrupt pin active states
+    #0, INTLVL_LOW, INTLVL_HIGH
+
 VAR
 
     long _gyro_cnts_per_lsb
@@ -194,16 +197,15 @@ PUB HighPassFilterMode(mode) | tmp
 PUB Int1Mask(func_mask) | tmp
 ' Set interrupt/function mask for INT1 pin
 '   Valid values:
-'       Bit 321   321
-'           |||   |||
-'    Range %000..%111
-'       Bit 3: Interrupt enable (*0: Disable, 1: Enable)
-'       Bit 2: Boot status (*0: Disable, 1: Enable)
-'       Bit 1: Interrupt active state (*0: High, 1: Low)
+'       Bit 10   10
+'           ||   ||
+'    Range %00..%11
+'       Bit 1: Interrupt enable (*0: Disable, 1: Enable)
+'       Bit 0: Boot status (*0: Disable, 1: Enable)
     tmp := $00
     readReg(core#CTRL_REG3, 1, @tmp)
     case func_mask
-        %000..%111:
+        %00..%11:
             func_mask <<= core#FLD_INT1
         OTHER:
             result := (tmp >> core#FLD_INT1) & core#BITS_INT1
@@ -211,6 +213,23 @@ PUB Int1Mask(func_mask) | tmp
 
     tmp &= core#MASK_INT1
     tmp := (tmp | func_mask)
+    writeReg(core#CTRL_REG3, 1, @tmp)
+
+PUB IntActiveState(state) | tmp
+' Set active state for interrupts
+'   Valid values: INTLVL_LOW (0), INTLVL_HIGH (1)
+'   Any other value polls the chip and returns the current setting
+    tmp := $00
+    readReg(core#CTRL_REG3, 1, @tmp)
+    case state
+        INTLVL_LOW, INTLVL_HIGH:
+            state := ((state ^ 1) & %1) << core#FLD_H_LACTIVE
+        OTHER:
+            result := (((tmp >> core#FLD_H_LACTIVE) ^ 1) & %1)
+            return
+
+    tmp &= core#MASK_H_LACTIVE
+    tmp := (tmp | state)
     writeReg(core#CTRL_REG3, 1, @tmp)
 
 PUB OpMode(mode) | tmp

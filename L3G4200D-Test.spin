@@ -47,6 +47,7 @@ PUB Main
     _row := 3
     ser.Position (0, _row)
 
+    H_LACTIVE(1)
     FS(1)
     INT1(1)
     HPCF(1)
@@ -54,6 +55,15 @@ PUB Main
     OPMODE(1)
     DR(1)
     FlashLED (LED, 100)
+
+PUB H_LACTIVE(reps) | tmp, read
+
+    _row++
+    repeat reps
+        repeat tmp from 0 to 1
+            gyro.IntActiveState (tmp)
+            read := gyro.IntActiveState (-2)
+            Message (string("H_LACTIVE"), tmp, read)
 
 PUB FS(reps) | tmp, read
 
@@ -68,7 +78,7 @@ PUB INT1(reps) | tmp, read
 
     _row++
     repeat reps
-        repeat tmp from %000 to %111
+        repeat tmp from %00 to %11
             gyro.Int1Mask (tmp)
             read := gyro.Int1Mask (-2)
             Message (string("INT1"), tmp, read)
