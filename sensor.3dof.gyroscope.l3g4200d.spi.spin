@@ -218,6 +218,29 @@ PUB Int1Mask(func_mask) | tmp
     tmp := (tmp | func_mask)
     writeReg(core#CTRL_REG3, 1, @tmp)
 
+PUB Int2Mask(func_mask) | tmp
+' Set interrupt/function mask for INT2 pin
+'   Valid values:
+'       Bit 3210   3210
+'           ||||   ||||
+'    Range %0000..%1111
+'       Bit 3: Data ready
+'       Bit 2: FIFO watermark
+'       Bit 1: FIFO overrun
+'       Bit 0: FIFO empty
+    tmp := $00
+    readReg(core#CTRL_REG3, 1, @tmp)
+    case func_mask
+        %0000..%1111:
+            func_mask <<= core#FLD_INT2
+        OTHER:
+            result := (tmp >> core#FLD_INT2) & core#BITS_INT2
+            return
+
+    tmp &= core#MASK_INT2
+    tmp := (tmp | func_mask)
+    writeReg(core#CTRL_REG3, 1, @tmp)
+
 PUB IntActiveState(state) | tmp
 ' Set active state for interrupts
 '   Valid values: INTLVL_LOW (0), INTLVL_HIGH (1)

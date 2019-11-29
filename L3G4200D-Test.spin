@@ -46,7 +46,8 @@ PUB Main
 
     _row := 3
     ser.Position (0, _row)
-
+'    _expanded := TRUE
+    INT2(1)
     PP_OD(1)
     H_LACTIVE(1)
     FS(1)
@@ -56,6 +57,15 @@ PUB Main
     OPMODE(1)
     DR(1)
     FlashLED (LED, 100)
+
+PUB INT2(reps) | tmp, read
+
+    _row++
+    repeat reps
+        repeat tmp from %0000 to %1111
+            gyro.Int2Mask (tmp)
+            read := gyro.Int2Mask (-2)
+            Message (string("INT2"), tmp, read)
 
 PUB PP_OD(reps) | tmp, read
 

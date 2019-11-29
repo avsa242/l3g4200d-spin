@@ -61,7 +61,9 @@ CON
         FLD_I2_WTM              = 2
         FLD_I2_ORUN             = 1
         FLD_I2_EMPTY            = 0
+        FLD_INT2                = 0
         BITS_INT1               = %11
+        BITS_INT2               = %1111
         MASK_I1_INT1            = CTRL_REG3_MASK ^ (1 << FLD_I1_INT1)
         MASK_I1_BOOT            = CTRL_REG3_MASK ^ (1 << FLD_I1_BOOT)
         MASK_H_LACTIVE          = CTRL_REG3_MASK ^ (1 << FLD_H_LACTIVE)
@@ -71,6 +73,7 @@ CON
         MASK_I2_WTM             = CTRL_REG3_MASK ^ (1 << FLD_I2_WTM)
         MASK_I2_ORUN            = CTRL_REG3_MASK ^ (1 << FLD_I2_ORUN)
         MASK_I2_EMPTY           = CTRL_REG3_MASK ^ (1 << FLD_I2_EMPTY)
+        MASK_INT2               = CTRL_REG3_MASK ^ (BITS_INT2 << FLD_INT2)
 
     CTRL_REG4                   = $23
     CTRL_REG4_MASK              = $F7
