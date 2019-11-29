@@ -25,6 +25,9 @@ CON
 ' Interrupt pin active states
     #0, INTLVL_LOW, INTLVL_HIGH
 
+' Interrupt pin output type
+    #0, INT_PP, INT_OD
+
 VAR
 
     long _gyro_cnts_per_lsb
@@ -230,6 +233,25 @@ PUB IntActiveState(state) | tmp
 
     tmp &= core#MASK_H_LACTIVE
     tmp := (tmp | state)
+    writeReg(core#CTRL_REG3, 1, @tmp)
+
+PUB IntOutputType(pp_od) | tmp
+' Set interrupt pin output type
+'   Valid values:
+'       INT_PP (0): Push-pull
+'       INT_OD (1): Open-drain
+'   Any other value polls the chip and returns the current setting
+    tmp := $00
+    readReg(core#CTRL_REG3, 1, @tmp)
+    case pp_od
+        INT_PP, INT_OD:
+            pp_od := pp_od << core#FLD_PP_OD
+        OTHER:
+            result := (tmp >> core#FLD_PP_OD) & %1
+            return
+
+    tmp &= core#MASK_PP_OD
+    tmp := (tmp | pp_od)
     writeReg(core#CTRL_REG3, 1, @tmp)
 
 PUB OpMode(mode) | tmp
