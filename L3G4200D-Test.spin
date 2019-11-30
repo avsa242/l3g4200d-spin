@@ -46,10 +46,10 @@ PUB Main
 
     _row := 3
     ser.Position (0, _row)
-    _expanded := TRUE
+'    _expanded := TRUE
 
+    FIFO_EN(1)
     BLE(1)
-    repeat
     BDU(1)
     INT2(1)
     PP_OD(1)
@@ -61,6 +61,15 @@ PUB Main
     OPMODE(1)
     DR(1)
     FlashLED (LED, 100)
+
+PUB FIFO_EN(reps) | tmp, read
+
+    _row++
+    repeat reps
+        repeat tmp from -1 to 0
+            gyro.FIFOEnabled (tmp)
+            read := gyro.FIFOEnabled (-2)
+            Message (string("FIFO_EN"), tmp, read)
 
 PUB BLE(reps) | tmp, read
 

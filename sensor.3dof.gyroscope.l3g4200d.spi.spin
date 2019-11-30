@@ -136,6 +136,25 @@ PUB DeviceID
     result := $00
     readReg(core#WHO_AM_I, 1, @result)
 
+PUB FIFOEnabled(enabled) | tmp
+' Enable FIFO for gyro data
+'   Valid values:
+'       FALSE (0): FIFO disabled
+'       TRUE (-1 or 1): FIFO enabled
+'   Any other value polls the chip and returns the current setting
+    tmp := $00
+    readReg(core#CTRL_REG5, 1, @tmp)
+    case ||enabled
+        0, 1:
+            enabled := (||enabled & %1) << core#FLD_FIFO_EN
+        OTHER:
+            result := ((tmp >> core#FLD_FIFO_EN) & %1) * TRUE
+            return
+
+    tmp &= core#MASK_FIFO_EN
+    tmp := (tmp | enabled)
+    writeReg(core#CTRL_REG5, 1, @tmp)
+
 PUB GyroData(ptr_x, ptr_y, ptr_z) | tmp[2]
 ' Read gyroscope data
     bytefill(@tmp, $00, 8)
