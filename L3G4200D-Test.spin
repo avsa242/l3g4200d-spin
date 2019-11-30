@@ -47,8 +47,10 @@ PUB Main
     _row := 3
     ser.Position (0, _row)
     _expanded := TRUE
-    BDU(1)
+
+    BLE(1)
     repeat
+    BDU(1)
     INT2(1)
     PP_OD(1)
     H_LACTIVE(1)
@@ -59,6 +61,15 @@ PUB Main
     OPMODE(1)
     DR(1)
     FlashLED (LED, 100)
+
+PUB BLE(reps) | tmp, read
+
+    _row++
+    repeat reps
+        repeat tmp from 0 to 1
+            gyro.DataByteOrder (tmp)
+            read := gyro.DataByteOrder (-2)
+            Message (string("BLE"), tmp, read)
 
 PUB BDU(reps) | tmp, read
 

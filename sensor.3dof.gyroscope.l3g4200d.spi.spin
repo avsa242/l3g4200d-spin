@@ -28,6 +28,9 @@ CON
 ' Interrupt pin output type
     #0, INT_PP, INT_OD
 
+' Gyro data byte order
+    #0, LSBFIRST, MSBFIRST
+
 VAR
 
     long _gyro_cnts_per_lsb
@@ -89,6 +92,26 @@ PUB BlockUpdateEnabled(enabled) | tmp
 
     tmp &= core#MASK_BDU
     tmp := (tmp | enabled)
+    writeReg(core#CTRL_REG4, 1, @tmp)
+
+PUB DataByteOrder(lsb_msb_first) | tmp
+' Set byte order of gyro data
+'   Valid values:
+'       LSBFIRST (0), MSBFIRST (1)
+'   Any other value polls the chip and returns the current setting
+'   NOTE: Intended only for use when utilizing raw gyro data from GyroData method.
+'       GyroDPS expects the data order to be LSBFIRST
+    tmp := $00
+    readReg(core#CTRL_REG4, 1, @tmp)
+    case lsb_msb_first
+        LSBFIRST, MSBFIRST:
+            lsb_msb_first <<= core#FLD_BLE
+        OTHER:
+            result := (tmp >> core#FLD_BLE) & %1
+            return
+
+    tmp &= core#MASK_BLE
+    tmp := (tmp | lsb_msb_first)
     writeReg(core#CTRL_REG4, 1, @tmp)
 
 PUB DataOverflowed
