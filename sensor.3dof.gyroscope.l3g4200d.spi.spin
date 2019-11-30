@@ -72,6 +72,25 @@ PUB Defaults
 
     GyroScale(250)
 
+PUB BlockUpdateEnabled(enabled) | tmp
+' Enable block updates
+'   Valid values:
+'       FALSE (0): Update gyro data outputs continuously
+'       TRUE (-1 or 1): Pause further updates until both MSB and LSB of data have been read
+'   Any other value polls the chip and returns the current setting
+    tmp := $00
+    readReg(core#CTRL_REG4, 1, @tmp)
+    case ||enabled
+        0, 1:
+            enabled := (||enabled & %1) << core#FLD_BDU
+        OTHER:
+            result := ((tmp >> core#FLD_BDU) & %1) * TRUE
+            return
+
+    tmp &= core#MASK_BDU
+    tmp := (tmp | enabled)
+    writeReg(core#CTRL_REG4, 1, @tmp)
+
 PUB DataOverflowed
 ' Indicates previously acquired data has been overwritten
 '   Returns: TRUE (-1) if data has overflowed/been overwritten, FALSE otherwise

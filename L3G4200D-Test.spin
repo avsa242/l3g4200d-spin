@@ -46,7 +46,9 @@ PUB Main
 
     _row := 3
     ser.Position (0, _row)
-'    _expanded := TRUE
+    _expanded := TRUE
+    BDU(1)
+    repeat
     INT2(1)
     PP_OD(1)
     H_LACTIVE(1)
@@ -57,6 +59,15 @@ PUB Main
     OPMODE(1)
     DR(1)
     FlashLED (LED, 100)
+
+PUB BDU(reps) | tmp, read
+
+    _row++
+    repeat reps
+        repeat tmp from -1 to 0
+            gyro.BlockUpdateEnabled (tmp)
+            read := gyro.BlockUpdateEnabled (-2)
+            Message (string("BDU"), tmp, read)
 
 PUB INT2(reps) | tmp, read
 
