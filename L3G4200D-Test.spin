@@ -48,6 +48,7 @@ PUB Main
     ser.Position (0, _row)
 '    _expanded := TRUE
 
+    HPEN(1)
     FIFO_EN(1)
     BLE(1)
     BDU(1)
@@ -61,6 +62,15 @@ PUB Main
     OPMODE(1)
     DR(1)
     FlashLED (LED, 100)
+
+PUB HPEN(reps) | tmp, read
+
+    _row++
+    repeat reps
+        repeat tmp from -1 to 0
+            gyro.HighPassFilterEnabled (tmp)
+            read := gyro.HighPassFilterEnabled (-2)
+            Message (string("HPEN"), tmp, read)
 
 PUB FIFO_EN(reps) | tmp, read
 

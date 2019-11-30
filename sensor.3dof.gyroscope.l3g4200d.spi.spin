@@ -192,6 +192,25 @@ PUB GyroScale(dps) | tmp
     tmp := (tmp | dps)
     writeReg(core#CTRL_REG4, 1, @tmp)
 
+PUB HighPassFilterEnabled(enabled) | tmp
+' Enable high-pass filter for gyro data
+'   Valid values:
+'       FALSE (0): High-pass filter disabled
+'       TRUE (-1 or 1): High-pass filter enabled
+'   Any other value polls the chip and returns the current setting
+    tmp := $00
+    readReg(core#CTRL_REG5, 1, @tmp)
+    case ||enabled
+        0, 1:
+            enabled := (||enabled & %1) << core#FLD_HPEN
+        OTHER:
+            result := ((tmp >> core#FLD_HPEN) & %1) * TRUE
+            return
+
+    tmp &= core#MASK_HPEN
+    tmp := (tmp | enabled)
+    writeReg(core#CTRL_REG5, 1, @tmp)
+
 PUB HighPassFilterFreq(freq) | tmp
 ' Set high-pass filter frequency
     tmp := $00
