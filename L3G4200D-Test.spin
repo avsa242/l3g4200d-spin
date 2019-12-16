@@ -32,7 +32,7 @@ OBJ
     ser     : "com.serial.terminal"
     time    : "time"
     io      : "io"
-    gyro    : "sensor.3dof.gyroscope.l3g4200d.spi"
+    gyro    : "sensor.gyroscope.3dof.l3g4200d.spi"
 
 VAR
 

@@ -28,7 +28,7 @@ OBJ
     time    : "time"
     io      : "io"
     int     : "string.integer"
-    gyro    : "sensor.3dof.gyroscope.l3g4200d.spi"
+    gyro    : "sensor.gyroscope.3dof.l3g4200d.spi"
 
 VAR
 
@@ -47,7 +47,8 @@ PUB Main
     repeat
         ser.Position (0, 5)
 '        GyroRaw
-        GyroCalc
+'        GyroCalc
+        ser.Dec ( gyro.Temperature)
 
 PUB GyroCalc | x, y, z
 

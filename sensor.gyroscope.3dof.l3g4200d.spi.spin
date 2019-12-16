@@ -400,6 +400,10 @@ PUB OutputDataRate(Hz) | tmp
     tmp := (tmp | Hz)
     writeReg(core#CTRL_REG1, 1, @tmp)
 
+PUB Temperature
+' Read device temperature
+    readReg(core#OUT_TEMP, 1, @result)
+
 PRI readReg(reg, nr_bytes, buff_addr) | tmp
 ' Read nr_bytes from register 'reg' to address 'buff_addr'
 
