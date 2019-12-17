@@ -32,7 +32,7 @@ OBJ
 
 VAR
 
-    long _overflows
+    long _overruns
     byte _ser_cog
 
 PUB Main
@@ -54,8 +54,8 @@ PUB GyroCalc | x, y, z
 
     repeat until gyro.DataReady
 
-    if gyro.DataOverflowed
-        _overflows++
+    if gyro.DataOverrun
+        _overruns++
 
     gyro.GyroDPS (@x, @y, @z)                      ' Then read it into the local variables
 
@@ -72,15 +72,15 @@ PUB GyroCalc | x, y, z
     Frac(z, 1_000_000)
     ser.NewLine
 
-    ser.Str (string("Overflows: "))
-    ser.Str (int.DecPadded (_overflows, 5))
+    ser.Str (string("Overruns: "))
+    ser.Str (int.DecPadded (_overruns, 5))
 
 PUB GyroRaw | x, y, z
 
     repeat until gyro.DataReady
 
-    if gyro.DataOverflowed
-        _overflows++
+    if gyro.DataOverrun
+        _overruns++
 
     gyro.GyroData (@x, @y, @z)                      ' Then read it into the local variables
 
@@ -98,8 +98,8 @@ PUB GyroRaw | x, y, z
     ser.NewLine
 
     ser.NewLine
-    ser.Str (string("Overflows: "))
-    ser.Str (int.DecPadded (_overflows, 5))
+    ser.Str (string("Overruns: "))
+    ser.Str (int.DecPadded (_overruns, 5))
 
 PUB Frac(scaled, divisor) | whole[4], part[4], places, tmp
 ' Display a scaled up number in its natural form - scale it back down by divisor

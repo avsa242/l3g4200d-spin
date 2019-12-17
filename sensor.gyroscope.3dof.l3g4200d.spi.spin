@@ -114,9 +114,9 @@ PUB DataByteOrder(lsb_msb_first) | tmp
     tmp := (tmp | lsb_msb_first)
     writeReg(core#CTRL_REG4, 1, @tmp)
 
-PUB DataOverflowed
+PUB DataOverrun
 ' Indicates previously acquired data has been overwritten
-'   Returns: TRUE (-1) if data has overflowed/been overwritten, FALSE otherwise
+'   Returns: TRUE (-1) if data has overrun/been overwritten, FALSE otherwise
     result := $00
     readReg(core#STATUS_REG, 1, @result)
     result := (result >> core#FLD_ZYXOR) & %1
