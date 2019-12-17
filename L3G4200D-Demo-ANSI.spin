@@ -24,7 +24,7 @@ CON
 OBJ
 
     cfg     : "core.con.boardcfg.flip"
-    ser     : "com.serial.terminal"
+    ser     : "com.serial.terminal.ansi"
     time    : "time"
     io      : "io"
     int     : "string.integer"
@@ -135,11 +135,11 @@ PUB Setup
     repeat until _ser_cog := ser.Start (115_200)
     time.MSleep(100)
     ser.Clear
-    ser.Str(string("Serial terminal started", ser#NL))
+    ser.Str(string("Serial terminal started", ser#CR, ser#LF))
     if gyro.Start (CS_PIN, SCL_PIN, SDA_PIN, SDO_PIN)
-        ser.Str(string("L3G4200D driver started", ser#NL))
+        ser.Str(string("L3G4200D driver started", ser#CR, ser#LF))
     else
-        ser.Str(string("L3G4200D driver failed to start - halting", ser#NL))
+        ser.Str(string("L3G4200D driver failed to start - halting", ser#CR, ser#LF))
         gyro.Stop
         time.MSleep (500)
         FlashLED (LED, 500)
