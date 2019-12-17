@@ -155,6 +155,24 @@ PUB FIFOEnabled(enabled) | tmp
     tmp := (tmp | enabled)
     writeReg(core#CTRL_REG5, 1, @tmp)
 
+PUB GyroAxisEnabled(mask) | tmp
+' Enable gyroscope individual axes, by mask
+'   Valid values:
+'       0: Disable axis, 1: Enable axis
+'       Bits %210
+'             ZYX
+'   Any other value polls the chip and returns the current setting
+    tmp := $00
+    readReg(core#CTRL_REG1, 1, @tmp)
+    case mask
+        %000..%111:
+        OTHER:
+            return tmp & core#BITS_XYZEN
+
+    tmp &= core#MASK_XYZEN
+    tmp := (tmp | mask) & core#CTRL_REG1_MASK
+    writeReg(core#CTRL_REG1, 1, @tmp)
+
 PUB GyroData(ptr_x, ptr_y, ptr_z) | tmp[2]
 ' Read gyroscope data
     bytefill(@tmp, $00, 8)
@@ -377,6 +395,8 @@ PUB OpMode(mode) | tmp
             tmp &= core#MASK_PD
         OTHER:
             result := (tmp >> core#FLD_PD) & %1
+            if tmp & core#BITS_XYZEN
+                result += 1
             return
 
     tmp := (tmp | mode)
@@ -406,14 +426,13 @@ PUB Temperature
 
 PRI readReg(reg, nr_bytes, buff_addr) | tmp
 ' Read nr_bytes from register 'reg' to address 'buff_addr'
-
-' Handle quirky registers on a case-by-case basis
     case reg
         $0F, $20..$27, $2E..$38:
         $28..$2D:
             reg |= MS
         OTHER:
             return FALSE
+
     reg |= R
     io.Low (_CS)
     spi.SHIFTOUT(_MOSI, _SCK, core#MOSI_BITORDER, 8, reg)
@@ -424,6 +443,10 @@ PRI readReg(reg, nr_bytes, buff_addr) | tmp
 
 PRI writeReg(reg, nr_bytes, buff_addr) | tmp
 ' Write nr_bytes to register 'reg' stored at buff_addr
+    case reg
+        $20..$25, $2E, $30, $32..$38:
+        OTHER:
+            return FALSE
 
     io.Low (_CS)
     spi.SHIFTOUT(_MOSI, _SCK, core#MOSI_BITORDER, 8, reg)

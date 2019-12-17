@@ -15,6 +15,7 @@ CON
 ' SPI Configuration
     CPOL                        = 1
     CLK_DELAY                   = 1
+    SCK_MAX_FREQ                = 10_000_000
     MOSI_BITORDER               = 5             'MSBFIRST
     MISO_BITORDER               = 2             'MSBPRE
 
@@ -39,7 +40,7 @@ CON
         MASK_ZEN                = CTRL_REG1_MASK ^ (1 << FLD_ZEN)
         MASK_YEN                = CTRL_REG1_MASK ^ (1 << FLD_YEN)
         MASK_XEN                = CTRL_REG1_MASK ^ (1 << FLD_XEN)
-        MASK_XYZEN              = CTRL_REG1_MASK ^ (BITS_DR << FLD_XYZEN)
+        MASK_XYZEN              = CTRL_REG1_MASK ^ (BITS_XYZEN << FLD_XYZEN)
 
     CTRL_REG2                   = $21
     CTRL_REG2_MASK              = $3F
