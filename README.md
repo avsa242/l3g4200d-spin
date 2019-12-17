@@ -7,11 +7,13 @@ This is a P8X32A/Propeller driver object for the STMicroelectronics L3G2400D 3Do
 
 * SPI connection at up to 1MHz
 * Read device ID (who am i)
-* Read Gyroscope data
-* Read flags for data ready or overflowed
+* Read Gyroscope data (raw, or calculated in millionths of a degree per second)
+* Read flags for data ready or overrun
 * Set operation mode (powerdown, sleep, normal/active)
 * Set output data rate
 * Set high-pass filter freq for ODR, configure high-pass filter mode
+* Set interrupt mask (int1 & int2), active pin state, output type
+* Enable individual axes
 
 ## Requirements
 
