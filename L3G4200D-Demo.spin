@@ -5,7 +5,7 @@
     Description: Demo app for the L3G4200D driver
     Copyright (c) 2019
     Started Nov 27, 2019
-    Updated Nov 29, 2019
+    Updated Dec 17, 2019
     See end of file for terms of use.
     --------------------------------------------
 }
