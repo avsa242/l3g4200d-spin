@@ -1,7 +1,7 @@
 # l3g4200d-spin 
 ---------------
 
-This is a P8X32A/Propeller driver object for the STMicroelectronics L3G2400D 3DoF Gyroscope
+This is a P8X32A/Propeller driver object for the STMicroelectronics L3G4200D 3DoF Gyroscope
 
 ## Salient Features
 
