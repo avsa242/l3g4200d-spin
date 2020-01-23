@@ -2,10 +2,11 @@
     --------------------------------------------
     Filename: L3G4200D-Demo.spin
     Author: Jesse Burt
-    Description: Demo app for the L3G4200D driver
-    Copyright (c) 2019
+    Description: Simple demo of the L3G4200D driver that
+        outputs live data from the chip.
+    Copyright (c) 2020
     Started Nov 27, 2019
-    Updated Dec 17, 2019
+    Updated Jan 23, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -16,6 +17,10 @@ CON
     _xinfreq    = cfg#_xinfreq
 
     LED         = cfg#LED1
+    SER_RX      = 31
+    SER_TX      = 30
+    SER_BAUD    = 115_200
+
     CS_PIN      = 3
     SCL_PIN     = 2
     SDA_PIN     = 1
@@ -23,133 +28,103 @@ CON
 
 OBJ
 
-    cfg     : "core.con.boardcfg.flip"
-    ser     : "com.serial.terminal"
-    time    : "time"
-    io      : "io"
-    int     : "string.integer"
-    gyro    : "sensor.gyroscope.3dof.l3g4200d.spi"
+    cfg         : "core.con.boardcfg.flip"
+    ser         : "com.serial.terminal.ansi"
+    time        : "time"
+    io          : "io"
+    l3g4200d    : "sensor.gyroscope.3dof.l3g4200d.spi"
+    int         : "string.integer"
 
 VAR
 
-    long _overruns
-    byte _ser_cog
+    byte _ser_cog, _l3g4200d_cog
 
 PUB Main
 
     Setup
-    gyro.OpMode (2)
-    ser.str(string("opmode: "))
-    ser.dec (gyro.opmode(-2))
-    ser.newline
 
-    gyro.GyroAxisEnabled(%100)
-    ser.str(string("axis enabled: "))
-    ser.bin(gyro.gyroaxisenabled(-2), 3)
-    ser.newline
+    l3g4200d.GyroOpMode(l3g4200d#NORMAL)
+    l3g4200d.GyroDataRate(800)
+    l3g4200d.GyroAxisEnabled(%111)
+    l3g4200d.GyroScale(250)
+    ser.HideCursor
 
-    gyro.OutputDataRate (100)
-    ser.str(string("output data rate: "))
-    ser.dec(gyro.outputdatarate(-2))
-    ser.newline
-
-    gyro.GyroScale (2000)
-    ser.Str (string("gyro scale "))
-    ser.Dec (gyro.gyroscale(-2))
-
+{
     repeat
-        ser.Position (0, 10)
-'        GyroRaw
+        ser.Position (0, 3)
         GyroCalc
-'        ser.Dec ( gyro.Temperature)
+        ser.Position (0, 4)
+        TempRaw
 
-PUB GyroCalc | x, y, z, divisor
-' Display gyroscope data, calculated to degrees per second
-    divisor := 1_000_000
-    repeat until gyro.DataReady                     ' Wait until there's new data available
-
-    if gyro.DataOverrun                             ' If we're too slow to read/can't keep up,
-        _overruns++                                 '   increment this counter
-
-    gyro.GyroDPS (@x, @y, @z)                       ' Read the data into the local variables
-
-    ser.Str (string("X: "))
-    Frac(x, divisor)
-    ser.NewLine
-    
-    ser.Str (string("Y: "))
-    Frac(y, divisor)
-    ser.NewLine
-
-    ser.Str (string("Z: "))
-    Frac(z, divisor)
-    ser.NewLine
-
-    ser.Str (string("Overruns: "))
-    ser.Str (int.DecPadded (_overruns, 5))
-
-PUB GyroRaw | x, y, z
-' Display gyroscope raw data
-    repeat until gyro.DataReady                     ' Wait until new data is available
-
-    if gyro.DataOverrun                             ' If we're too slow to read/can't keep up,
-        _overruns++                                 '   increment this counter
-
-    gyro.GyroData (@x, @y, @z)                      ' Read the data into the local variables
-
-    ser.Str (string("X: "))
-    ser.Str (int.DecPadded (x, 6))
-    ser.NewLine
-    
-    ser.Str (string("Y: "))
-    ser.Str (int.DecPadded (y, 6))
-    ser.NewLine
-
-    ser.Str (string("Z: "))
-    ser.Str (int.DecPadded (z, 6))
-    ser.NewLine
-
-    ser.NewLine
-    ser.Str (string("Overruns: "))
-    ser.Str (int.DecPadded (_overruns, 5))
-
-PUB Frac(scaled, divisor) | whole[4], part[4], places, tmp
-' Display a scaled up number in its natural form - scale it back down by divisor
-    whole := scaled / divisor
-    tmp := divisor
-    places := 0
+        time.MSleep (10)
+}
 
     repeat
-        tmp /= 10
-        places++
-    until tmp == 1
-    part := int.DecZeroed(||(scaled // divisor), places)
+        ser.Position (0, 3)
+        GyroRaw
+        ser.Position (0, 4)
+        TempRaw
 
-    ser.Dec (whole)
-    ser.Char (".")
-    ser.Str (part)
-    ser.Chars (32, 5)
+        time.MSleep (10)
+
+
+        case ser.RxCheck
+            27:
+                quit
+'            "c", "C":
+'                Calibrate
+
+    ser.ShowCursor
+    FlashLED(LED, 100)
+
+{PUB Calibrate
+
+    ser.Position (0, 8)
+    ser.Str(string("Calibrating..."))
+    l3g4200d.CalibrateXLG
+    l3g4200d.CalibrateMag (10)
+    ser.Position (0, 8)
+    ser.Str(string("              "))
+}
+PUB GyroCalc | gx, gy, gz
+
+    repeat until l3g4200d.GyroDataReady
+    l3g4200d.GyroDPS (@gx, @gy, @gz)
+    ser.Str (string("Gyro:  "))
+    ser.Str (int.DecPadded (gx, 10))
+    ser.Str (int.DecPadded (gy, 10))
+    ser.Str (int.DecPadded (gz, 10))
+
+PUB GyroRaw | gx, gy, gz
+
+    repeat until l3g4200d.GyroDataReady
+    l3g4200d.GyroData (@gx, @gy, @gz)
+    ser.Str (string("Gyro:  "))
+    ser.Str (int.DecPadded (gx, 7))
+    ser.Str (int.DecPadded (gy, 7))
+    ser.Str (int.DecPadded (gz, 7))
+
+PUB TempRaw
+
+    ser.Str (string("Temperature: "))
+    ser.Str (int.DecPadded (l3g4200d.Temperature, 7))
 
 PUB Setup
 
-    repeat until _ser_cog := ser.Start (115_200)
-    time.MSleep(100)
+    repeat until _ser_cog := ser.StartRXTX (SER_RX, SER_TX, %0000, SER_BAUD)
+    time.MSleep(20)
     ser.Clear
-    ser.Str(string("Serial terminal started", ser#NL))
-    if gyro.Start (CS_PIN, SCL_PIN, SDA_PIN, SDO_PIN)
-        ser.Str(string("L3G4200D driver started", ser#NL))
+    ser.Str (string("Serial terminal started", ser#CR, ser#LF))
+    if _l3g4200d_cog := l3g4200d.Start (CS_PIN, SCL_PIN, SDA_PIN, SDO_PIN)
+        ser.Str (string("L3G4200D driver started", ser#CR, ser#LF))
     else
-        ser.Str(string("L3G4200D driver failed to start - halting", ser#NL))
-        gyro.Stop
-        time.MSleep (500)
-        FlashLED (LED, 500)
+        ser.Str (string("L3G4200D driver failed to start - halting", ser#CR, ser#LF))
+        l3g4200d.Stop
+        time.MSleep (5)
+        ser.Stop
+        FlashLED(LED, 500)
 
-PUB FlashLED(led_pin, delay_ms)
-
-    io.Output (led_pin)
-    repeat
-        io.Toggle (led_pin)
-        time.MSleep (delay_ms)
+#include "lib.utility.spin"
 
 DAT
 {

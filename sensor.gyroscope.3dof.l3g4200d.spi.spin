@@ -3,9 +3,9 @@
     Filename: sensor.gyroscope.3dof.l3g4200d.spi.spin
     Author: Jesse Burt
     Description: Driver for the ST L3G4200D 3-axis gyroscope
-    Copyright (c) 2019
+    Copyright (c) 2020
     Started Nov 27, 2019
-    Updated Dec 17, 2019
+    Updated Jan 23, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -44,7 +44,7 @@ OBJ
     io  : "io"
 
 PUB Null
-''This is not a top-level object
+' This is not a top-level object
 
 PUB Start(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN) : okay
 
@@ -114,22 +114,6 @@ PUB DataByteOrder(lsb_msb_first) | tmp
     tmp := (tmp | lsb_msb_first)
     writeReg(core#CTRL_REG4, 1, @tmp)
 
-PUB DataOverrun
-' Indicates previously acquired data has been overwritten
-'   Returns: TRUE (-1) if data has overrun/been overwritten, FALSE otherwise
-    result := $00
-    readReg(core#STATUS_REG, 1, @result)
-    result := (result >> core#FLD_ZYXOR) & %1
-    result := result * TRUE
-
-PUB DataReady | tmp
-' Indicates data is ready
-'   Returns: TRUE (-1) if data ready, FALSE otherwise
-    tmp := $00
-    readReg(core#STATUS_REG, 1, @tmp)
-    tmp := (tmp >> core#FLD_ZYXDA) & %1
-    return tmp == 1
-
 PUB DeviceID
 ' Read Device ID (who am I)
 '   Known values: $D3
@@ -182,6 +166,40 @@ PUB GyroData(ptr_x, ptr_y, ptr_z) | tmp[2]
     long[ptr_y] := ~~tmp.word[1]
     long[ptr_z] := ~~tmp.word[2]
 
+PUB GyroDataOverrun
+' Indicates previously acquired data has been overwritten
+'   Returns: TRUE (-1) if data has overrun/been overwritten, FALSE otherwise
+    result := $00
+    readReg(core#STATUS_REG, 1, @result)
+    result := (result >> core#FLD_ZYXOR) & %1
+    result := result * TRUE
+
+PUB GyroDataRate(Hz) | tmp
+' Set rate of data output, in Hz
+'   Valid values: 100, 200, 400, 800
+'   Any other value polls the chip and returns the current setting
+    tmp := $00
+    readReg(core#CTRL_REG1, 1, @tmp)
+    case Hz
+        100, 200, 400, 800:
+            Hz := lookdownz(Hz: 100, 200, 400, 800) << core#FLD_DR
+        OTHER:
+            tmp := (tmp >> core#FLD_DR) & core#BITS_DR
+            result := lookupz(tmp: 100, 200, 400, 800)
+            return
+
+    tmp &= core#MASK_DR
+    tmp := (tmp | Hz)
+    writeReg(core#CTRL_REG1, 1, @tmp)
+
+PUB GyroDataReady | tmp
+' Indicates data is ready
+'   Returns: TRUE (-1) if data ready, FALSE otherwise
+    tmp := $00
+    readReg(core#STATUS_REG, 1, @tmp)
+    tmp := (tmp >> core#FLD_ZYXDA) & %1
+    return tmp == 1
+
 PUB GyroDPS(ptr_x, ptr_y, ptr_z) | tmp[2]
 ' Read gyroscope data, calculated
 '   Returns: Angular rate in millionths of a degree per second
@@ -190,6 +208,33 @@ PUB GyroDPS(ptr_x, ptr_y, ptr_z) | tmp[2]
     long[ptr_x] := (~~tmp.word[0] * _gyro_cnts_per_lsb)
     long[ptr_y] := (~~tmp.word[1] * _gyro_cnts_per_lsb)
     long[ptr_z] := (~~tmp.word[2] * _gyro_cnts_per_lsb)
+
+PUB GyroOpMode(mode) | tmp
+' Set operation mode
+'   Valid values:
+'       POWERDOWN (0): Power down - lowest power state
+'       SLEEP (1): Sleep - sensor enabled, but X, Y, Z outputs disabled
+'       NORMAL (2): Normal - active operating state
+'   Any other value polls the chip and returns the current setting
+    tmp := $00
+    readReg(core#CTRL_REG1, 1, @tmp)
+    case mode
+        POWERDOWN:
+            tmp &= core#MASK_PD
+        SLEEP:
+            mode := (1 << core#FLD_PD)
+            tmp &= core#MASK_XYZEN
+        NORMAL:
+            mode := (1 << core#FLD_PD)
+            tmp &= core#MASK_PD
+        OTHER:
+            result := (tmp >> core#FLD_PD) & %1
+            if tmp & core#BITS_XYZEN
+                result += 1
+            return
+
+    tmp := (tmp | mode)
+    writeReg(core#CTRL_REG1, 1, @tmp)
 
 PUB GyroScale(dps) | tmp
 ' Set gyro full-scale range, in degrees per second
@@ -233,7 +278,7 @@ PUB HighPassFilterFreq(freq) | tmp
 ' Set high-pass filter frequency
     tmp := $00
     readReg(core#CTRL_REG2, 1, @tmp)
-    case OutputDataRate(-2)
+    case GyroDataRate(-2)
         100:
             case freq
                 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01:
@@ -374,51 +419,6 @@ PUB IntOutputType(pp_od) | tmp
     tmp &= core#MASK_PP_OD
     tmp := (tmp | pp_od)
     writeReg(core#CTRL_REG3, 1, @tmp)
-
-PUB OpMode(mode) | tmp
-' Set operation mode
-'   Valid values:
-'       POWERDOWN (0): Power down - lowest power state
-'       SLEEP (1): Sleep - sensor enabled, but X, Y, Z outputs disabled
-'       NORMAL (2): Normal - active operating state
-'   Any other value polls the chip and returns the current setting
-    tmp := $00
-    readReg(core#CTRL_REG1, 1, @tmp)
-    case mode
-        POWERDOWN:
-            tmp &= core#MASK_PD
-        SLEEP:
-            mode := (1 << core#FLD_PD)
-            tmp &= core#MASK_XYZEN
-        NORMAL:
-            mode := (1 << core#FLD_PD)
-            tmp &= core#MASK_PD
-        OTHER:
-            result := (tmp >> core#FLD_PD) & %1
-            if tmp & core#BITS_XYZEN
-                result += 1
-            return
-
-    tmp := (tmp | mode)
-    writeReg(core#CTRL_REG1, 1, @tmp)
-
-PUB OutputDataRate(Hz) | tmp
-' Set rate of data output, in Hz
-'   Valid values: 100, 200, 400, 800
-'   Any other value polls the chip and returns the current setting
-    tmp := $00
-    readReg(core#CTRL_REG1, 1, @tmp)
-    case Hz
-        100, 200, 400, 800:
-            Hz := lookdownz(Hz: 100, 200, 400, 800) << core#FLD_DR
-        OTHER:
-            tmp := (tmp >> core#FLD_DR) & core#BITS_DR
-            result := lookupz(tmp: 100, 200, 400, 800)
-            return
-
-    tmp &= core#MASK_DR
-    tmp := (tmp | Hz)
-    writeReg(core#CTRL_REG1, 1, @tmp)
 
 PUB Temperature
 ' Read device temperature
