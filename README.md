@@ -29,3 +29,4 @@ This is a P8X32A/Propeller driver object for the STMicroelectronics L3G4200D 3Do
 
 ## TODO
 - [ ] High-pass filter mode operation needs clarification on function/purpose
+- [ ] I2C driver variant
