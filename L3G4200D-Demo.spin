@@ -37,42 +37,48 @@ OBJ
 
 VAR
 
+    long _overruns
     byte _ser_cog, _l3g4200d_cog
 
-PUB Main
+PUB Main | dispmode
 
     Setup
 
     l3g4200d.GyroOpMode(l3g4200d#NORMAL)
     l3g4200d.GyroDataRate(800)
     l3g4200d.GyroAxisEnabled(%111)
-    l3g4200d.GyroScale(250)
+    l3g4200d.GyroScale(2000)
+
     ser.HideCursor
-
-{
     repeat
-        ser.Position (0, 3)
-        GyroCalc
-        ser.Position (0, 4)
-        TempRaw
-
-        time.MSleep (10)
-}
-
-    repeat
-        ser.Position (0, 3)
-        GyroRaw
-        ser.Position (0, 4)
-        TempRaw
-
-        time.MSleep (10)
-
-
         case ser.RxCheck
-            27:
+            "q", "Q":
+                ser.Position(0, 5)
+                ser.str(string("Halting"))
+                l3g4200d.Stop
+                time.MSleep(5)
+                ser.Stop
                 quit
 '            "c", "C":
 '                Calibrate
+            "r", "R":
+                ser.Position(0, 3)
+                repeat 2
+                    ser.ClearLine(ser#CLR_CUR_TO_END)
+                    ser.Newline
+                dispmode ^= 1
+
+
+        ser.Position (0, 3)
+        case dispmode
+            0:
+                GyroRaw
+                ser.Newline
+                TempRaw
+            1:
+                GyroCalc
+                ser.Newline
+                TempRaw
 
     ser.ShowCursor
     FlashLED(LED, 100)
@@ -90,19 +96,29 @@ PUB GyroCalc | gx, gy, gz
 
     repeat until l3g4200d.GyroDataReady
     l3g4200d.GyroDPS (@gx, @gy, @gz)
-    ser.Str (string("Gyro:  "))
-    ser.Str (int.DecPadded (gx, 10))
-    ser.Str (int.DecPadded (gy, 10))
-    ser.Str (int.DecPadded (gz, 10))
+    if l3g4200d.GyroDataOverrun
+        _overruns++
+    ser.Str (string("Gyro micro-DPS:  "))
+    ser.Str (int.DecPadded (gx, 12))
+    ser.Str (int.DecPadded (gy, 12))
+    ser.Str (int.DecPadded (gz, 12))
+    ser.Newline
+    ser.Str (string("Overruns: "))
+    ser.Dec (_overruns)
 
 PUB GyroRaw | gx, gy, gz
 
     repeat until l3g4200d.GyroDataReady
     l3g4200d.GyroData (@gx, @gy, @gz)
-    ser.Str (string("Gyro:  "))
+    if l3g4200d.GyroDataOverrun
+        _overruns++
+    ser.Str (string("Raw Gyro:  "))
     ser.Str (int.DecPadded (gx, 7))
     ser.Str (int.DecPadded (gy, 7))
     ser.Str (int.DecPadded (gz, 7))
+    ser.Newline
+    ser.Str (string("Overruns: "))
+    ser.Dec (_overruns)
 
 PUB TempRaw
 
