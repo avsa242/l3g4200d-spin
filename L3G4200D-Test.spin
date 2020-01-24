@@ -3,9 +3,9 @@ P{
     Filename: L3G4200D-Test.spin
     Author: Jesse Burt
     Description: Test app for the L3G4200D driver
-    Copyright (c) 2019
+    Copyright (c) 2020
     Started Nov 27, 2019
-    Updated Nov 29, 2019
+    Updated Jan 23, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -21,6 +21,10 @@ CON
     COL_PF      = 40
 
     LED         = cfg#LED1
+
+    SER_RX      = 31
+    SER_TX      = 30
+    SER_BAUD    = 115_200
     CS_PIN      = 3
     SCL_PIN     = 2
     SDA_PIN     = 1
@@ -29,7 +33,7 @@ CON
 OBJ
 
     cfg     : "core.con.boardcfg.flip"
-    ser     : "com.serial.terminal"
+    ser     : "com.serial.terminal.ansi"
     time    : "time"
     io      : "io"
     gyro    : "sensor.gyroscope.3dof.l3g4200d.spi"
@@ -146,7 +150,7 @@ PUB INT1(reps) | tmp, read
 
 PUB HPCF(reps) | tmp, read
 
-    gyro.OutputDataRate (100)
+    gyro.GyroDataRate (100)
     _row++
     repeat reps
         repeat tmp from 0 to 8
@@ -154,7 +158,7 @@ PUB HPCF(reps) | tmp, read
             read := gyro.HighPassFilterFreq (-2)
             Message (string("HPCF"), lookupz(tmp: 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01), read)
 
-    gyro.OutputDataRate (200)
+    gyro.GyroDataRate (200)
     _row++
     repeat reps
         repeat tmp from 0 to 8
@@ -162,7 +166,7 @@ PUB HPCF(reps) | tmp, read
             read := gyro.HighPassFilterFreq (-2)
             Message (string("HPCF"), lookupz(tmp: 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02), read)
 
-    gyro.OutputDataRate (400)
+    gyro.GyroDataRate (400)
     _row++
     repeat reps
         repeat tmp from 0 to 8
@@ -170,7 +174,7 @@ PUB HPCF(reps) | tmp, read
             read := gyro.HighPassFilterFreq (-2)
             Message (string("HPCF"), lookupz(tmp: 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05), read)
 
-    gyro.OutputDataRate (800)
+    gyro.GyroDataRate (800)
     _row++
     repeat reps
         repeat tmp from 0 to 8
@@ -192,8 +196,8 @@ PUB OPMODE(reps) | tmp, read
     _row++
     repeat reps
         repeat tmp from 0 to 2
-            gyro.OpMode (tmp)
-            read := gyro.OpMode (-2)
+            gyro.GyroOpMode (tmp)
+            read := gyro.GyroOpMode (-2)
             Message (string("OPMODE"), tmp, read)
 
 PUB DR(reps) | tmp, read
@@ -201,8 +205,8 @@ PUB DR(reps) | tmp, read
     _row++
     repeat reps
         repeat tmp from 0 to 3
-            gyro.OutputDataRate (lookupz(tmp: 100, 200, 400, 800))
-            read := gyro.OutputDataRate (-2)
+            gyro.GyroDataRate (lookupz(tmp: 100, 200, 400, 800))
+            read := gyro.GyroDataRate (-2)
             Message (string("DR"), lookupz(tmp: 100, 200, 400, 800), read)
 
 {
@@ -286,23 +290,19 @@ PUB PassFail(num)
 
 PUB Setup
 
-    repeat until _ser_cog := ser.Start (115_200)
+    repeat until _ser_cog := ser.StartRXTX (SER_RX, SER_TX, 0, SER_BAUD)
+    time.MSleep(30)
     ser.Clear
-    ser.Str(string("Serial terminal started", ser#NL))
+    ser.Str(string("Serial terminal started", ser#CR, ser#LF))
     if gyro.Start (CS_PIN, SCL_PIN, SDA_PIN, SDO_PIN)
-        ser.Str(string("L3G4200D driver started", ser#NL))
+        ser.Str(string("L3G4200D driver started", ser#CR, ser#LF))
     else
-        ser.Str(string("L3G4200D driver failed to start - halting", ser#NL))
+        ser.Str(string("L3G4200D driver failed to start - halting", ser#CR, ser#LF))
         gyro.Stop
         time.MSleep (500)
         FlashLED (LED, 500)
 
-PUB FlashLED(led_pin, delay_ms)
-
-    io.Output (led_pin)
-    repeat
-        io.Toggle (led_pin)
-        time.MSleep (delay_ms)
+#include "lib.utility.spin"
 
 DAT
 {
