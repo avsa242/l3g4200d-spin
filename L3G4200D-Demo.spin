@@ -6,7 +6,7 @@
         outputs live data from the chip.
     Copyright (c) 2020
     Started Nov 27, 2019
-    Updated Jan 23, 2020
+    Updated Mar 15, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -59,8 +59,6 @@ PUB Main | dispmode
                 time.MSleep(5)
                 ser.Stop
                 quit
-'            "c", "C":
-'                Calibrate
             "r", "R":
                 ser.Position(0, 3)
                 repeat 2
@@ -83,15 +81,6 @@ PUB Main | dispmode
     ser.ShowCursor
     FlashLED(LED, 100)
 
-{PUB Calibrate
-
-    ser.Position (0, 8)
-    ser.Str(string("Calibrating..."))
-    l3g4200d.CalibrateXLG
-    l3g4200d.CalibrateMag (10)
-    ser.Position (0, 8)
-    ser.Str(string("              "))
-}
 PUB GyroCalc | gx, gy, gz
 
     repeat until l3g4200d.GyroDataReady
