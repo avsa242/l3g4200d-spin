@@ -16,6 +16,7 @@ CON
     _clkmode    = cfg#_clkmode
     _xinfreq    = cfg#_xinfreq
 
+' User-modifiable constants
     LED         = cfg#LED1
     SER_RX      = 31
     SER_TX      = 30
@@ -44,22 +45,22 @@ PUB Main | dispmode
 
     Setup
 
-    l3g4200d.GyroOpMode(l3g4200d#NORMAL)
-    l3g4200d.GyroDataRate(800)
-    l3g4200d.GyroAxisEnabled(%111)
-    l3g4200d.GyroScale(2000)
+    l3g4200d.GyroOpMode(l3g4200d#NORMAL)                ' POWERDOWN (0), SLEEP (1), NORMAL (2)
+    l3g4200d.GyroDataRate(800)                          ' 100, 200, 400, 800 Hz
+    l3g4200d.GyroAxisEnabled(%111)                      ' 0 or 1 for each bit (Axis: %XYZ)
+    l3g4200d.GyroScale(2000)                            ' 250, 500, 200 degrees per second
 
     ser.HideCursor
     repeat
         case ser.RxCheck
-            "q", "Q":
+            "q", "Q":                                   ' Quit the demo, and power down
                 ser.Position(0, 5)
                 ser.str(string("Halting"))
                 l3g4200d.Stop
                 time.MSleep(5)
                 ser.Stop
                 quit
-            "r", "R":
+            "r", "R":                                   ' Switch between raw ADC output and DPS
                 ser.Position(0, 3)
                 repeat 2
                     ser.ClearLine(ser#CLR_CUR_TO_END)
@@ -82,7 +83,7 @@ PUB Main | dispmode
     FlashLED(LED, 100)
 
 PUB GyroCalc | gx, gy, gz
-
+' Display calculated gyroscope output, in micro-degrees per second
     repeat until l3g4200d.GyroDataReady
     l3g4200d.GyroDPS (@gx, @gy, @gz)
     if l3g4200d.GyroDataOverrun
@@ -96,7 +97,7 @@ PUB GyroCalc | gx, gy, gz
     ser.Dec (_overruns)
 
 PUB GyroRaw | gx, gy, gz
-
+' Display gyroscope raw ADC output
     repeat until l3g4200d.GyroDataReady
     l3g4200d.GyroData (@gx, @gy, @gz)
     if l3g4200d.GyroDataOverrun
@@ -110,7 +111,7 @@ PUB GyroRaw | gx, gy, gz
     ser.Dec (_overruns)
 
 PUB TempRaw
-
+' Display temperature raw output
     ser.Str (string("Temperature: "))
     ser.Str (int.DecPadded (l3g4200d.Temperature, 7))
 
