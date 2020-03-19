@@ -122,6 +122,7 @@ PUB Setup
     ser.Str (string("Serial terminal started", ser#CR, ser#LF))
     if _l3g4200d_cog := l3g4200d.Start (CS_PIN, SCL_PIN, SDA_PIN, SDO_PIN)
         ser.Str (string("L3G4200D driver started", ser#CR, ser#LF))
+        l3g4200d.Defaults
     else
         ser.Str (string("L3G4200D driver failed to start - halting", ser#CR, ser#LF))
         l3g4200d.Stop
