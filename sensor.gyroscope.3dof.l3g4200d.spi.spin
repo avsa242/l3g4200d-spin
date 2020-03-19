@@ -78,7 +78,7 @@ PUB Defaults
 PUB BlockUpdateEnabled(enabled) | tmp
 ' Enable block updates
 '   Valid values:
-'       FALSE (0): Update gyro data outputs continuously
+'      *FALSE (0): Update gyro data outputs continuously
 '       TRUE (-1 or 1): Pause further updates until both MSB and LSB of data have been read
 '   Any other value polls the chip and returns the current setting
     tmp := $00
@@ -97,7 +97,7 @@ PUB BlockUpdateEnabled(enabled) | tmp
 PUB DataByteOrder(lsb_msb_first) | tmp
 ' Set byte order of gyro data
 '   Valid values:
-'       LSBFIRST (0), MSBFIRST (1)
+'      *LSBFIRST (0), MSBFIRST (1)
 '   Any other value polls the chip and returns the current setting
 '   NOTE: Intended only for use when utilizing raw gyro data from GyroData method.
 '       GyroDPS expects the data order to be LSBFIRST
@@ -123,7 +123,7 @@ PUB DeviceID
 PUB FIFOEnabled(enabled) | tmp
 ' Enable FIFO for gyro data
 '   Valid values:
-'       FALSE (0): FIFO disabled
+'      *FALSE (0): FIFO disabled
 '       TRUE (-1 or 1): FIFO enabled
 '   Any other value polls the chip and returns the current setting
     tmp := $00
@@ -144,7 +144,7 @@ PUB GyroAxisEnabled(mask) | tmp
 '   Valid values:
 '       0: Disable axis, 1: Enable axis
 '       Bits %210
-'             ZYX
+'             ZYX (default: %111)
 '   Any other value polls the chip and returns the current setting
     tmp := $00
     readReg(core#CTRL_REG1, 1, @tmp)
@@ -176,7 +176,7 @@ PUB GyroDataOverrun
 
 PUB GyroDataRate(Hz) | tmp
 ' Set rate of data output, in Hz
-'   Valid values: 100, 200, 400, 800
+'   Valid values: *100, 200, 400, 800
 '   Any other value polls the chip and returns the current setting
     tmp := $00
     readReg(core#CTRL_REG1, 1, @tmp)
@@ -212,7 +212,7 @@ PUB GyroDPS(ptr_x, ptr_y, ptr_z) | tmp[2]
 PUB GyroOpMode(mode) | tmp
 ' Set operation mode
 '   Valid values:
-'       POWERDOWN (0): Power down - lowest power state
+'      *POWERDOWN (0): Power down - lowest power state
 '       SLEEP (1): Sleep - sensor enabled, but X, Y, Z outputs disabled
 '       NORMAL (2): Normal - active operating state
 '   Any other value polls the chip and returns the current setting
@@ -238,7 +238,7 @@ PUB GyroOpMode(mode) | tmp
 
 PUB GyroScale(dps) | tmp
 ' Set gyro full-scale range, in degrees per second
-'   Valid values: 250, 500, 2000
+'   Valid values: *250, 500, 2000
 '   Any other value polls the chip and returns the current setting
     tmp := $00
     readReg(core#CTRL_REG4, 1, @tmp)
@@ -258,7 +258,7 @@ PUB GyroScale(dps) | tmp
 PUB HighPassFilterEnabled(enabled) | tmp
 ' Enable high-pass filter for gyro data
 '   Valid values:
-'       FALSE (0): High-pass filter disabled
+'      *FALSE (0): High-pass filter disabled
 '       TRUE (-1 or 1): High-pass filter enabled
 '   Any other value polls the chip and returns the current setting
     tmp := $00
@@ -275,7 +275,14 @@ PUB HighPassFilterEnabled(enabled) | tmp
     writeReg(core#CTRL_REG5, 1, @tmp)
 
 PUB HighPassFilterFreq(freq) | tmp
-' Set high-pass filter frequency
+' Set high-pass filter frequency, in Hz
+'    Valid values:
+'       If ODR=100Hz: *8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01
+'       If ODR=200Hz: *15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02
+'       If ODR=400Hz: *30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05
+'       If ODR=800Hz: *56_00, 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10
+'       NOTE: Values are fractional values expressed as whole numbers. The '_' should be interpreted as a decimal point.
+'           Examples: 8_00 = 8Hz, 0_50 = 0.5Hz, 0_02 = 0.02Hz
     tmp := $00
     readReg(core#CTRL_REG2, 1, @tmp)
     case GyroDataRate(-2)
@@ -322,7 +329,7 @@ PUB HighPassFilterFreq(freq) | tmp
 PUB HighPassFilterMode(mode) | tmp
 ' Set data output high pass filter mode
 '   Valid values:
-'       HPF_NORMAL_RES (0): Normal mode (reset reading HP_RESET_FILTER) XXX - clarify/expand
+'      *HPF_NORMAL_RES (0): Normal mode (reset reading HP_RESET_FILTER) XXX - clarify/expand
 '       HPF_REF (1): Reference signal for filtering
 '       HPF_NORMAL (2): Normal
 '       HPF_AUTO_RES (3): Autoreset on interrupt
@@ -366,7 +373,7 @@ PUB Int2Mask(func_mask) | tmp
 '   Valid values:
 '       Bit 3210   3210
 '           ||||   ||||
-'    Range %0000..%1111
+'    Range %0000..%1111 (default value: %0000)
 '       Bit 3: Data ready
 '       Bit 2: FIFO watermark
 '       Bit 1: FIFO overrun
@@ -375,10 +382,8 @@ PUB Int2Mask(func_mask) | tmp
     readReg(core#CTRL_REG3, 1, @tmp)
     case func_mask
         %0000..%1111:
-            func_mask <<= core#FLD_INT2
         OTHER:
-            result := (tmp >> core#FLD_INT2) & core#BITS_INT2
-            return
+            return tmp & core#BITS_INT2
 
     tmp &= core#MASK_INT2
     tmp := (tmp | func_mask)
@@ -386,7 +391,7 @@ PUB Int2Mask(func_mask) | tmp
 
 PUB IntActiveState(state) | tmp
 ' Set active state for interrupts
-'   Valid values: INTLVL_LOW (0), INTLVL_HIGH (1)
+'   Valid values: *INTLVL_LOW (0), INTLVL_HIGH (1)
 '   Any other value polls the chip and returns the current setting
     tmp := $00
     readReg(core#CTRL_REG3, 1, @tmp)
@@ -404,7 +409,7 @@ PUB IntActiveState(state) | tmp
 PUB IntOutputType(pp_od) | tmp
 ' Set interrupt pin output type
 '   Valid values:
-'       INT_PP (0): Push-pull
+'      *INT_PP (0): Push-pull
 '       INT_OD (1): Open-drain
 '   Any other value polls the chip and returns the current setting
     tmp := $00
