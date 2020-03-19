@@ -5,7 +5,7 @@
     Description: Driver for the ST L3G4200D 3-axis gyroscope
     Copyright (c) 2020
     Started Nov 27, 2019
-    Updated Jan 23, 2020
+    Updated Mar 19, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -51,6 +51,7 @@ PUB Start(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN) : okay
     okay := Startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN, core#CLK_DELAY, core#CPOL)
 
 PUB Startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN, SCK_DELAY, SCK_CPOL): okay
+
     if SCK_DELAY => 1 and lookdown(SCK_CPOL: 0, 1)
         if okay := spi.start (SCK_DELAY, SCK_CPOL)              'SPI Object Started?
             _CS := CS_PIN
@@ -62,7 +63,7 @@ PUB Startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN, SCK_DELAY, SCK_CPOL): okay
             io.Output (_CS)
             time.MSleep (10)
 
-            if DeviceID == $D3                                  'Is this actually an L3G4200D?
+            if DeviceID == core#DEVID_RESP                      'Is this actually an L3G4200D?
                 return okay
 
     return FALSE                                                'If we got here, something went wrong
@@ -73,7 +74,20 @@ PUB Stop
 
 PUB Defaults
 
+    BlockUpdateEnabled(FALSE)
+    DataByteOrder(LSBFIRST)
+    FIFOEnabled(FALSE)
+    GyroAxisEnabled(%111)
+    GyroDataRate(100)
+    GyroOpMode(POWERDOWN)
     GyroScale(250)
+    HighPassFilterEnabled(FALSE)
+    HighPassFilterFreq(8_00)
+    HighPassFilterMode(HPF_NORMAL_RES)
+    Int1Mask(%00)
+    Int2Mask(%0000)
+    IntActiveState(INTLVL_LOW)
+    IntOutputType(INT_PP)
 
 PUB BlockUpdateEnabled(enabled) | tmp
 ' Enable block updates

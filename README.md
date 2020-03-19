@@ -28,5 +28,6 @@ This is a P8X32A/Propeller driver object for the STMicroelectronics L3G4200D 3Do
 * Very early in development - may malfunction, or outright fail to build
 
 ## TODO
+- [ ] Add calibration/offset support
 - [ ] High-pass filter mode operation needs clarification on function/purpose
 - [ ] I2C driver variant

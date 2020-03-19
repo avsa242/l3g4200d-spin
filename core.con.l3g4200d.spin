@@ -19,6 +19,8 @@ CON
     MOSI_BITORDER               = 5             'MSBFIRST
     MISO_BITORDER               = 2             'MSBPRE
 
+    DEVID_RESP                  = $D3
+
 ' Register definitions
     WHO_AM_I                    = $0F
 
