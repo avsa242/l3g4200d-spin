@@ -29,7 +29,7 @@ CON
 OBJ
 
     cfg         : "core.con.boardcfg.flip"
-    ser         : "com.serial.terminal.ansi"
+    ser         : "com.serial.terminal"
     time        : "time"
     io          : "io"
     l3g4200d    : "sensor.gyroscope.3dof.l3g4200d.spi"
@@ -49,7 +49,6 @@ PUB Main | dispmode
     l3g4200d.GyroAxisEnabled(%111)
     l3g4200d.GyroScale(2000)
 
-    ser.HideCursor
     repeat
         case ser.RxCheck
             "q", "Q":
@@ -62,7 +61,7 @@ PUB Main | dispmode
             "r", "R":
                 ser.Position(0, 3)
                 repeat 2
-                    ser.ClearLine(ser#CLR_CUR_TO_END)
+                    ser.ClearLine
                     ser.Newline
                 dispmode ^= 1
 
@@ -78,7 +77,6 @@ PUB Main | dispmode
                 ser.Newline
                 TempRaw
 
-    ser.ShowCursor
     FlashLED(LED, 100)
 
 PUB GyroCalc | gx, gy, gz
@@ -119,17 +117,22 @@ PUB Setup
     repeat until _ser_cog := ser.StartRXTX (SER_RX, SER_TX, %0000, SER_BAUD)
     time.MSleep(20)
     ser.Clear
-    ser.Str (string("Serial terminal started", ser#CR, ser#LF))
+    ser.Str (string("Serial terminal started", ser#NL))
     if _l3g4200d_cog := l3g4200d.Start (CS_PIN, SCL_PIN, SDA_PIN, SDO_PIN)
-        ser.Str (string("L3G4200D driver started", ser#CR, ser#LF))
+        ser.Str (string("L3G4200D driver started", ser#NL))
     else
-        ser.Str (string("L3G4200D driver failed to start - halting", ser#CR, ser#LF))
+        ser.Str (string("L3G4200D driver failed to start - halting", ser#NL))
         l3g4200d.Stop
         time.MSleep (5)
         ser.Stop
         FlashLED(LED, 500)
 
-#include "lib.utility.spin"
+PUB FlashLED(led_pin, delay_ms)
+
+    io.Output(led_pin)
+    repeat
+        io.Toggle (led_pin)
+        time.MSleep (delay_ms)
 
 DAT
 {
