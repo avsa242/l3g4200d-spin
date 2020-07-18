@@ -5,12 +5,20 @@
     Description: Driver for the ST L3G4200D 3-axis gyroscope
     Copyright (c) 2020
     Started Nov 27, 2019
-    Updated Mar 19, 2020
+    Updated Jul 18, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
 
 CON
+
+' Indicate to user apps how many Degrees of Freedom each sub-sensor has
+'   (also imply whether or not it has a particular sensor)
+    ACCEL_DOF           = 0
+    GYRO_DOF            = 3
+    MAG_DOF             = 0
+    BARO_DOF            = 0
+    DOF                 = ACCEL_DOF + GYRO_DOF + MAG_DOF + BARO_DOF
 
 ' SPI transaction bits
     R           = 1 << 7                                            ' ORd with reg # to indicate a read transaction
