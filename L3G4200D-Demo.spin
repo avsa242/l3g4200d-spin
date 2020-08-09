@@ -6,7 +6,7 @@
         outputs live data from the chip.
     Copyright (c) 2020
     Started Nov 27, 2019
-    Updated Mar 15, 2020
+    Updated Aug 9, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -16,20 +16,21 @@ CON
     _clkmode    = cfg#_clkmode
     _xinfreq    = cfg#_xinfreq
 
+' User-modifiable constants
     LED         = cfg#LED1
     SER_RX      = 31
     SER_TX      = 30
     SER_BAUD    = 115_200
 
-    CS_PIN      = 3
-    SCL_PIN     = 2
-    SDA_PIN     = 1
-    SDO_PIN     = 0
+    CS_PIN      = 10
+    SCL_PIN     = 15
+    SDA_PIN     = 14
+    SDO_PIN     = 13
 
 OBJ
 
     cfg         : "core.con.boardcfg.flip"
-    ser         : "com.serial.terminal"
+    ser         : "com.serial.terminal.ansi"
     time        : "time"
     io          : "io"
     l3g4200d    : "sensor.gyroscope.3dof.l3g4200d.spi"
@@ -44,24 +45,25 @@ PUB Main | dispmode
 
     Setup
 
-    l3g4200d.GyroOpMode(l3g4200d#NORMAL)
-    l3g4200d.GyroDataRate(800)
-    l3g4200d.GyroAxisEnabled(%111)
-    l3g4200d.GyroScale(2000)
+    l3g4200d.GyroOpMode(l3g4200d#NORMAL)                ' POWERDOWN (0), SLEEP (1), NORMAL (2)
+    l3g4200d.GyroDataRate(800)                          ' 100, 200, 400, 800 Hz
+    l3g4200d.GyroAxisEnabled(%111)                      ' 0 or 1 for each bit (Axis: %XYZ)
+    l3g4200d.GyroScale(2000)                            ' 250, 500, 200 degrees per second
 
+    ser.HideCursor
     repeat
         case ser.RxCheck
-            "q", "Q":
+            "q", "Q":                                   ' Quit the demo, and power down
                 ser.Position(0, 5)
                 ser.str(string("Halting"))
                 l3g4200d.Stop
                 time.MSleep(5)
                 ser.Stop
                 quit
-            "r", "R":
+            "r", "R":                                   ' Switch between raw ADC output and DPS
                 ser.Position(0, 3)
                 repeat 2
-                    ser.ClearLine
+                    ser.clearline{}
                     ser.Newline
                 dispmode ^= 1
 
@@ -77,10 +79,11 @@ PUB Main | dispmode
                 ser.Newline
                 TempRaw
 
+    ser.ShowCursor
     FlashLED(LED, 100)
 
 PUB GyroCalc | gx, gy, gz
-
+' Display calculated gyroscope output, in micro-degrees per second
     repeat until l3g4200d.GyroDataReady
     l3g4200d.GyroDPS (@gx, @gy, @gz)
     if l3g4200d.GyroDataOverrun
@@ -94,7 +97,7 @@ PUB GyroCalc | gx, gy, gz
     ser.Dec (_overruns)
 
 PUB GyroRaw | gx, gy, gz
-
+' Display gyroscope raw ADC output
     repeat until l3g4200d.GyroDataReady
     l3g4200d.GyroData (@gx, @gy, @gz)
     if l3g4200d.GyroDataOverrun
@@ -108,7 +111,7 @@ PUB GyroRaw | gx, gy, gz
     ser.Dec (_overruns)
 
 PUB TempRaw
-
+' Display temperature raw output
     ser.Str (string("Temperature: "))
     ser.Str (int.DecPadded (l3g4200d.Temperature, 7))
 
@@ -117,22 +120,18 @@ PUB Setup
     repeat until _ser_cog := ser.StartRXTX (SER_RX, SER_TX, %0000, SER_BAUD)
     time.MSleep(20)
     ser.Clear
-    ser.Str (string("Serial terminal started", ser#NL))
+    ser.Str (string("Serial terminal started", ser#CR, ser#LF))
     if _l3g4200d_cog := l3g4200d.Start (CS_PIN, SCL_PIN, SDA_PIN, SDO_PIN)
-        ser.Str (string("L3G4200D driver started", ser#NL))
+        ser.Str (string("L3G4200D driver started", ser#CR, ser#LF))
+        l3g4200d.Defaults
     else
-        ser.Str (string("L3G4200D driver failed to start - halting", ser#NL))
+        ser.Str (string("L3G4200D driver failed to start - halting", ser#CR, ser#LF))
         l3g4200d.Stop
         time.MSleep (5)
         ser.Stop
         FlashLED(LED, 500)
 
-PUB FlashLED(led_pin, delay_ms)
-
-    io.Output(led_pin)
-    repeat
-        io.Toggle (led_pin)
-        time.MSleep (delay_ms)
+#include "lib.utility.spin"
 
 DAT
 {
