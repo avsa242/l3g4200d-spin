@@ -101,8 +101,7 @@ PUB BlockUpdateEnabled(enabled) | tmp
         0, 1:
             enabled := (||(enabled) & 1) << core#BDU
         other:
-            result := ((tmp >> core#BDU) & 1) == 1
-            return
+            return ((tmp >> core#BDU) & 1) == 1
 
     tmp &= core#BDU_MASK
     tmp := (tmp | enabled)
@@ -121,8 +120,7 @@ PUB DataByteOrder(lsb_msb_first) | tmp
         LSBFIRST, MSBFIRST:
             lsb_msb_first <<= core#BLE
         other:
-            result := (tmp >> core#BLE) & 1
-            return
+            return (tmp >> core#BLE) & 1
 
     tmp &= core#BLE_MASK
     tmp := (tmp | lsb_msb_first)
@@ -146,8 +144,7 @@ PUB FIFOEnabled(enabled) | tmp
         0, 1:
             enabled := (||(enabled) & 1) << core#FIFO_EN
         other:
-            result := ((tmp >> core#FIFO_EN) & 1) == 1
-            return
+            return ((tmp >> core#FIFO_EN) & 1) == 1
 
     tmp &= core#FIFO_EN_MASK
     tmp := (tmp | enabled)
@@ -199,8 +196,7 @@ PUB GyroDataRate(Hz) | tmp
             Hz := lookdownz(Hz: 100, 200, 400, 800) << core#DR
         other:
             tmp := (tmp >> core#DR) & core#DR_BITS
-            result := lookupz(tmp: 100, 200, 400, 800)
-            return
+            return lookupz(tmp: 100, 200, 400, 800)
 
     tmp &= core#DR_MASK
     tmp := (tmp | Hz)
@@ -262,8 +258,7 @@ PUB GyroScale(dps) | tmp
             _gyro_cnts_per_lsb := lookupz(dps >> core#FS: 8_750, 17_500, 70_000)
         other:
             tmp := (tmp >> core#FS) & core#FS_BITS
-            result := lookupz(tmp: 250, 500, 2000)
-            return
+            return lookupz(tmp: 250, 500, 2000)
 
     tmp &= core#FS_MASK
     tmp := (tmp | dps)
@@ -281,8 +276,7 @@ PUB HighPassFilterEnabled(enabled) | tmp
         0, 1:
             enabled := (||(enabled) & 1) << core#HPEN
         other:
-            result := ((tmp >> core#HPEN) & 1) == 1
-            return
+            return ((tmp >> core#HPEN) & 1) == 1
 
     tmp &= core#HPEN_MASK
     tmp := (tmp | enabled)
@@ -306,8 +300,7 @@ PUB HighPassFilterFreq(freq) | tmp
                     freq := lookdownz(freq: 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01) << core#HPCF
                 other:
                     tmp := (tmp >> core#HPCF) & core#HPCF_BITS
-                    result := lookupz(tmp: 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01)
-                    return
+                    return lookupz(tmp: 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01)
 
         200:
             case freq
@@ -315,8 +308,7 @@ PUB HighPassFilterFreq(freq) | tmp
                     freq := lookdownz(freq: 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02) << core#HPCF
                 other:
                     tmp := (tmp >> core#HPCF) & core#HPCF_BITS
-                    result := lookupz(tmp: 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02)
-                    return
+                    return lookupz(tmp: 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02)
 
         400:
             case freq
@@ -324,8 +316,7 @@ PUB HighPassFilterFreq(freq) | tmp
                     freq := lookdownz(freq: 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05) << core#HPCF
                 other:
                     tmp := (tmp >> core#HPCF) & core#HPCF_BITS
-                    result := lookupz(tmp: 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05)
-                    return
+                    return lookupz(tmp: 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05)
 
         800:
             case freq
@@ -333,8 +324,7 @@ PUB HighPassFilterFreq(freq) | tmp
                     freq := lookdownz(freq: 56_00, 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10) << core#HPCF
                 other:
                     tmp := (tmp >> core#HPCF) & core#HPCF_BITS
-                    result := lookupz(tmp: 56_00, 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10)
-                    return
+                    return lookupz(tmp: 56_00, 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10)
 
     tmp &= core#HPCF_MASK
     tmp := (tmp | freq)
@@ -354,8 +344,7 @@ PUB HighPassFilterMode(mode) | tmp
         HPF_NORMAL_RES, HPF_REF, HPF_NORMAL, HPF_AUTO_RES:
             mode <<= core#HPM
         other:
-            result := (tmp >> core#HPM) & core#HPM_BITS
-            return
+            return (tmp >> core#HPM) & core#HPM_BITS
 
     tmp &= core#HPM_MASK
     tmp := (tmp | mode)
@@ -375,8 +364,7 @@ PUB Int1Mask(func_mask) | tmp
         %00..%11:
             func_mask <<= core#INT1
         other:
-            result := (tmp >> core#INT1) & core#INT1_BITS
-            return
+            return (tmp >> core#INT1) & core#INT1_BITS
 
     tmp &= core#INT1_MASK
     tmp := (tmp | func_mask)
@@ -413,8 +401,7 @@ PUB IntActiveState(state) | tmp
         INTLVL_LOW, INTLVL_HIGH:
             state := ((state ^ 1) & 1) << core#H_LACTIVE
         other:
-            result := (((tmp >> core#H_LACTIVE) ^ 1) & 1)
-            return
+            return (((tmp >> core#H_LACTIVE) ^ 1) & 1)
 
     tmp &= core#H_LACTIVE_MASK
     tmp := (tmp | state)
@@ -432,8 +419,7 @@ PUB IntOutputType(pp_od) | tmp
         INT_PP, INT_OD:
             pp_od := pp_od << core#PP_OD
         other:
-            result := (tmp >> core#PP_OD) & 1
-            return
+            return (tmp >> core#PP_OD) & 1
 
     tmp &= core#PP_OD_MASK
     tmp := (tmp | pp_od)
