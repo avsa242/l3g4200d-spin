@@ -5,7 +5,7 @@
     Description: Driver for the ST L3G4200D 3-axis gyroscope
     Copyright (c) 2020
     Started Nov 27, 2019
-    Updated Jul 18, 2020
+    Updated Dec 24, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -107,12 +107,12 @@ PUB BlockUpdateEnabled(enabled) | tmp
     readReg(core#CTRL_REG4, 1, @tmp)
     case ||enabled
         0, 1:
-            enabled := (||enabled & %1) << core#FLD_BDU
+            enabled := (||enabled & %1) << core#BDU
         OTHER:
-            result := ((tmp >> core#FLD_BDU) & %1) * TRUE
+            result := ((tmp >> core#BDU) & %1) * TRUE
             return
 
-    tmp &= core#MASK_BDU
+    tmp &= core#BDU_MASK
     tmp := (tmp | enabled)
     writeReg(core#CTRL_REG4, 1, @tmp)
 
@@ -127,12 +127,12 @@ PUB DataByteOrder(lsb_msb_first) | tmp
     readReg(core#CTRL_REG4, 1, @tmp)
     case lsb_msb_first
         LSBFIRST, MSBFIRST:
-            lsb_msb_first <<= core#FLD_BLE
+            lsb_msb_first <<= core#BLE
         OTHER:
-            result := (tmp >> core#FLD_BLE) & %1
+            result := (tmp >> core#BLE) & %1
             return
 
-    tmp &= core#MASK_BLE
+    tmp &= core#BLE_MASK
     tmp := (tmp | lsb_msb_first)
     writeReg(core#CTRL_REG4, 1, @tmp)
 
@@ -152,12 +152,12 @@ PUB FIFOEnabled(enabled) | tmp
     readReg(core#CTRL_REG5, 1, @tmp)
     case ||enabled
         0, 1:
-            enabled := (||enabled & %1) << core#FLD_FIFO_EN
+            enabled := (||enabled & %1) << core#FIFO_EN
         OTHER:
-            result := ((tmp >> core#FLD_FIFO_EN) & %1) * TRUE
+            result := ((tmp >> core#FIFO_EN) & %1) * TRUE
             return
 
-    tmp &= core#MASK_FIFO_EN
+    tmp &= core#FIFO_EN_MASK
     tmp := (tmp | enabled)
     writeReg(core#CTRL_REG5, 1, @tmp)
 
@@ -173,9 +173,9 @@ PUB GyroAxisEnabled(mask) | tmp
     case mask
         %000..%111:
         OTHER:
-            return tmp & core#BITS_XYZEN
+            return tmp & core#XYZEN_BITS
 
-    tmp &= core#MASK_XYZEN
+    tmp &= core#XYZEN_MASK
     tmp := (tmp | mask) & core#CTRL_REG1_MASK
     writeReg(core#CTRL_REG1, 1, @tmp)
 
@@ -193,7 +193,7 @@ PUB GyroDataOverrun
 '   Returns: TRUE (-1) if data has overrun/been overwritten, FALSE otherwise
     result := $00
     readReg(core#STATUS_REG, 1, @result)
-    result := (result >> core#FLD_ZYXOR) & %1
+    result := (result >> core#ZYXOR) & %1
     result := result * TRUE
 
 PUB GyroDataRate(Hz) | tmp
@@ -204,13 +204,13 @@ PUB GyroDataRate(Hz) | tmp
     readReg(core#CTRL_REG1, 1, @tmp)
     case Hz
         100, 200, 400, 800:
-            Hz := lookdownz(Hz: 100, 200, 400, 800) << core#FLD_DR
+            Hz := lookdownz(Hz: 100, 200, 400, 800) << core#DR
         OTHER:
-            tmp := (tmp >> core#FLD_DR) & core#BITS_DR
+            tmp := (tmp >> core#DR) & core#DR_BITS
             result := lookupz(tmp: 100, 200, 400, 800)
             return
 
-    tmp &= core#MASK_DR
+    tmp &= core#DR_MASK
     tmp := (tmp | Hz)
     writeReg(core#CTRL_REG1, 1, @tmp)
 
@@ -219,7 +219,7 @@ PUB GyroDataReady | tmp
 '   Returns: TRUE (-1) if data ready, FALSE otherwise
     tmp := $00
     readReg(core#STATUS_REG, 1, @tmp)
-    tmp := (tmp >> core#FLD_ZYXDA) & %1
+    tmp := (tmp >> core#ZYXDA) & %1
     return tmp == 1
 
 PUB GyroDPS(ptr_x, ptr_y, ptr_z) | tmp[2]
@@ -242,16 +242,16 @@ PUB GyroOpMode(mode) | tmp
     readReg(core#CTRL_REG1, 1, @tmp)
     case mode
         POWERDOWN:
-            tmp &= core#MASK_PD
+            tmp &= core#PD_MASK
         SLEEP:
-            mode := (1 << core#FLD_PD)
-            tmp &= core#MASK_XYZEN
+            mode := (1 << core#PD)
+            tmp &= core#XYZEN_MASK
         NORMAL:
-            mode := (1 << core#FLD_PD)
-            tmp &= core#MASK_PD
+            mode := (1 << core#PD)
+            tmp &= core#PD_MASK
         OTHER:
-            result := (tmp >> core#FLD_PD) & %1
-            if tmp & core#BITS_XYZEN
+            result := (tmp >> core#PD) & %1
+            if tmp & core#XYZEN_BITS
                 result += 1
             return
 
@@ -266,14 +266,14 @@ PUB GyroScale(dps) | tmp
     readReg(core#CTRL_REG4, 1, @tmp)
     case dps
         250, 500, 2000:
-            dps := lookdownz(dps: 250, 500, 2000) << core#FLD_FS
-            _gyro_cnts_per_lsb := lookupz(dps >> core#FLD_FS: 8_750, 17_500, 70_000)
+            dps := lookdownz(dps: 250, 500, 2000) << core#FS
+            _gyro_cnts_per_lsb := lookupz(dps >> core#FS: 8_750, 17_500, 70_000)
         OTHER:
-            tmp := (tmp >> core#FLD_FS) & core#BITS_FS
+            tmp := (tmp >> core#FS) & core#FS_BITS
             result := lookupz(tmp: 250, 500, 2000)
             return
 
-    tmp &= core#MASK_FS
+    tmp &= core#FS_MASK
     tmp := (tmp | dps)
     writeReg(core#CTRL_REG4, 1, @tmp)
 
@@ -287,12 +287,12 @@ PUB HighPassFilterEnabled(enabled) | tmp
     readReg(core#CTRL_REG5, 1, @tmp)
     case ||enabled
         0, 1:
-            enabled := (||enabled & %1) << core#FLD_HPEN
+            enabled := (||enabled & %1) << core#HPEN
         OTHER:
-            result := ((tmp >> core#FLD_HPEN) & %1) * TRUE
+            result := ((tmp >> core#HPEN) & %1) * TRUE
             return
 
-    tmp &= core#MASK_HPEN
+    tmp &= core#HPEN_MASK
     tmp := (tmp | enabled)
     writeReg(core#CTRL_REG5, 1, @tmp)
 
@@ -311,40 +311,40 @@ PUB HighPassFilterFreq(freq) | tmp
         100:
             case freq
                 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01:
-                    freq := lookdownz(freq: 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01) << core#FLD_HPCF
+                    freq := lookdownz(freq: 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01) << core#HPCF
                 OTHER:
-                    tmp := (tmp >> core#FLD_HPCF) & core#BITS_HPCF
+                    tmp := (tmp >> core#HPCF) & core#HPCF_BITS
                     result := lookupz(tmp: 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01)
                     return
 
         200:
             case freq
                 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02:
-                    freq := lookdownz(freq: 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02) << core#FLD_HPCF
+                    freq := lookdownz(freq: 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02) << core#HPCF
                 OTHER:
-                    tmp := (tmp >> core#FLD_HPCF) & core#BITS_HPCF
+                    tmp := (tmp >> core#HPCF) & core#HPCF_BITS
                     result := lookupz(tmp: 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02)
                     return
 
         400:
             case freq
                 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05:
-                    freq := lookdownz(freq: 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05) << core#FLD_HPCF
+                    freq := lookdownz(freq: 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05) << core#HPCF
                 OTHER:
-                    tmp := (tmp >> core#FLD_HPCF) & core#BITS_HPCF
+                    tmp := (tmp >> core#HPCF) & core#HPCF_BITS
                     result := lookupz(tmp: 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05)
                     return
 
         800:
             case freq
                 56_00, 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10:
-                    freq := lookdownz(freq: 56_00, 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10) << core#FLD_HPCF
+                    freq := lookdownz(freq: 56_00, 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10) << core#HPCF
                 OTHER:
-                    tmp := (tmp >> core#FLD_HPCF) & core#BITS_HPCF
+                    tmp := (tmp >> core#HPCF) & core#HPCF_BITS
                     result := lookupz(tmp: 56_00, 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10)
                     return
 
-    tmp &= core#MASK_HPCF
+    tmp &= core#HPCF_MASK
     tmp := (tmp | freq)
     writeReg(core#CTRL_REG2, 1, @tmp)
 
@@ -360,12 +360,12 @@ PUB HighPassFilterMode(mode) | tmp
     readReg(core#CTRL_REG2, 1, @tmp)
     case mode
         HPF_NORMAL_RES, HPF_REF, HPF_NORMAL, HPF_AUTO_RES:
-            mode <<= core#FLD_HPM
+            mode <<= core#HPM
         OTHER:
-            result := (tmp >> core#FLD_HPM) & core#BITS_HPM
+            result := (tmp >> core#HPM) & core#HPM_BITS
             return
 
-    tmp &= core#MASK_HPM
+    tmp &= core#HPM_MASK
     tmp := (tmp | mode)
     writeReg(core#CTRL_REG2, 1, @tmp)
 
@@ -381,12 +381,12 @@ PUB Int1Mask(func_mask) | tmp
     readReg(core#CTRL_REG3, 1, @tmp)
     case func_mask
         %00..%11:
-            func_mask <<= core#FLD_INT1
+            func_mask <<= core#INT1
         OTHER:
-            result := (tmp >> core#FLD_INT1) & core#BITS_INT1
+            result := (tmp >> core#INT1) & core#INT1_BITS
             return
 
-    tmp &= core#MASK_INT1
+    tmp &= core#INT1_MASK
     tmp := (tmp | func_mask)
     writeReg(core#CTRL_REG3, 1, @tmp)
 
@@ -405,9 +405,9 @@ PUB Int2Mask(func_mask) | tmp
     case func_mask
         %0000..%1111:
         OTHER:
-            return tmp & core#BITS_INT2
+            return tmp & core#INT2_BITS
 
-    tmp &= core#MASK_INT2
+    tmp &= core#INT2_MASK
     tmp := (tmp | func_mask)
     writeReg(core#CTRL_REG3, 1, @tmp)
 
@@ -419,12 +419,12 @@ PUB IntActiveState(state) | tmp
     readReg(core#CTRL_REG3, 1, @tmp)
     case state
         INTLVL_LOW, INTLVL_HIGH:
-            state := ((state ^ 1) & %1) << core#FLD_H_LACTIVE
+            state := ((state ^ 1) & %1) << core#H_LACTIVE
         OTHER:
-            result := (((tmp >> core#FLD_H_LACTIVE) ^ 1) & %1)
+            result := (((tmp >> core#H_LACTIVE) ^ 1) & %1)
             return
 
-    tmp &= core#MASK_H_LACTIVE
+    tmp &= core#H_LACTIVE_MASK
     tmp := (tmp | state)
     writeReg(core#CTRL_REG3, 1, @tmp)
 
@@ -438,12 +438,12 @@ PUB IntOutputType(pp_od) | tmp
     readReg(core#CTRL_REG3, 1, @tmp)
     case pp_od
         INT_PP, INT_OD:
-            pp_od := pp_od << core#FLD_PP_OD
+            pp_od := pp_od << core#PP_OD
         OTHER:
-            result := (tmp >> core#FLD_PP_OD) & %1
+            result := (tmp >> core#PP_OD) & %1
             return
 
-    tmp &= core#MASK_PP_OD
+    tmp &= core#PP_OD_MASK
     tmp := (tmp | pp_od)
     writeReg(core#CTRL_REG3, 1, @tmp)
 
