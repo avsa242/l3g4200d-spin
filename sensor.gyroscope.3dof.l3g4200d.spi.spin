@@ -273,7 +273,7 @@ PUB HighPassFilterEnabled(state): curr_state
     state := ((curr_state & core#HPEN_MASK) | state)
     writereg(core#CTRL_REG5, 1, @state)
 
-PUB HighPassFilterFreq(freq) | curr_freq
+PUB HighPassFilterFreq(freq): curr_freq
 ' Set high-pass filter frequency, in Hz
 '    Valid values:
 '       If ODR=100Hz: *8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01
