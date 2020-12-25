@@ -42,7 +42,7 @@ CON
 VAR
 
     long _gyro_cnts_per_lsb
-    byte _CS, _MOSI, _MISO, _SCK
+    long _CS, _SCK, _MOSI, _MISO
 
 OBJ
 
@@ -54,15 +54,11 @@ OBJ
 PUB Null{}
 ' This is not a top-level object
 
-PUB Start(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN, SCK_DELAY, SCK_CPOL): okay
+PUB Start(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN, SCK_DELAY): okay
 
-    if SCK_DELAY => 1 and lookdown(SCK_CPOL: 0, 1)
-        if okay := spi.start(core#CLK_DELAY, core#CPOL)
-            _CS := CS_PIN
-            _MOSI := MOSI_PIN
-            _MISO := MISO_PIN
-            _SCK := SCK_PIN
-
+    if SCK_DELAY => 1
+        if okay := spi.start(SCK_DELAY, core#CPOL)
+            longmove(@_CS, @CS_PIN, 4)          ' copy pins to hub vars
             io.high(_CS)
             io.output(_CS)
             time.msleep(10)
@@ -101,9 +97,9 @@ PUB BlockUpdateEnabled(enabled) | tmp
 '   Any other value polls the chip and returns the current setting
     tmp := 0
     readreg(core#CTRL_REG4, 1, @tmp)
-    case ||enabled
+    case ||(enabled)
         0, 1:
-            enabled := (||enabled & 1) << core#BDU
+            enabled := (||(enabled) & 1) << core#BDU
         other:
             result := ((tmp >> core#BDU) & 1) * TRUE
             return
@@ -146,9 +142,9 @@ PUB FIFOEnabled(enabled) | tmp
 '   Any other value polls the chip and returns the current setting
     tmp := 0
     readreg(core#CTRL_REG5, 1, @tmp)
-    case ||enabled
+    case ||(enabled)
         0, 1:
-            enabled := (||enabled & 1) << core#FIFO_EN
+            enabled := (||(enabled) & 1) << core#FIFO_EN
         other:
             result := ((tmp >> core#FIFO_EN) & 1) * TRUE
             return
@@ -281,9 +277,9 @@ PUB HighPassFilterEnabled(enabled) | tmp
 '   Any other value polls the chip and returns the current setting
     tmp := 0
     readreg(core#CTRL_REG5, 1, @tmp)
-    case ||enabled
+    case ||(enabled)
         0, 1:
-            enabled := (||enabled & 1) << core#HPEN
+            enabled := (||(enabled) & 1) << core#HPEN
         other:
             result := ((tmp >> core#HPEN) & 1) * TRUE
             return
