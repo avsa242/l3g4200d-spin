@@ -126,11 +126,11 @@ PUB DataByteOrder(lsb_msb_first) | tmp
     tmp := (tmp | lsb_msb_first)
     writereg(core#CTRL_REG4, 1, @tmp)
 
-PUB DeviceID{}
+PUB DeviceID{}: id
 ' Read Device ID (who am I)
 '   Known values: $D3
-    result := 0
-    readreg(core#WHO_AM_I, 1, @result)
+    id := 0
+    readreg(core#WHO_AM_I, 1, @id)
 
 PUB FIFOEnabled(enabled) | tmp
 ' Enable FIFO for gyro data
@@ -177,13 +177,12 @@ PUB GyroData(ptr_x, ptr_y, ptr_z) | tmp[2]
     long[ptr_y] := ~~tmp.word[1]
     long[ptr_z] := ~~tmp.word[2]
 
-PUB GyroDataOverrun{}
-' Indicates previously acquired data has been overwritten
+PUB GyroDataOverrun{}: flag
+' Flag indicating previously acquired data has been overwritten
 '   Returns: TRUE (-1) if data has overrun/been overwritten, FALSE otherwise
-    result := 0
-    readreg(core#STATUS_REG, 1, @result)
-    result := (result >> core#ZYXOR) & 1
-    result := (result == 1)
+    flag := 0
+    readreg(core#STATUS_REG, 1, @flag)
+    return ((flag >> core#ZYXOR) & 1) == 1
 
 PUB GyroDataRate(Hz) | tmp
 ' Set rate of data output, in Hz
@@ -202,13 +201,12 @@ PUB GyroDataRate(Hz) | tmp
     tmp := (tmp | Hz)
     writereg(core#CTRL_REG1, 1, @tmp)
 
-PUB GyroDataReady{} | tmp
-' Indicates data is ready
+PUB GyroDataReady{}: flag
+' Flag indicates gyroscope data is ready
 '   Returns: TRUE (-1) if data ready, FALSE otherwise
-    tmp := 0
-    readreg(core#STATUS_REG, 1, @tmp)
-    tmp := (tmp >> core#ZYXDA) & 1
-    return tmp == 1
+    flag := 0
+    readreg(core#STATUS_REG, 1, @flag)
+    return ((flag >> core#ZYXDA) & 1) == 1
 
 PUB GyroDPS(ptr_x, ptr_y, ptr_z) | tmp[2]
 ' Read gyroscope data, calculated
@@ -425,9 +423,9 @@ PUB IntOutputType(pp_od) | tmp
     tmp := (tmp | pp_od)
     writereg(core#CTRL_REG3, 1, @tmp)
 
-PUB Temperature{}
+PUB Temperature{}: temp
 ' Read device temperature
-    readreg(core#OUT_TEMP, 1, @result)
+    readreg(core#OUT_TEMP, 1, @temp)
 
 PRI readReg(reg, nr_bytes, ptr_buff) | tmp
 ' Read nr_bytes from device into ptr_buff
