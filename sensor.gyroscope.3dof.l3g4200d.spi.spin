@@ -101,7 +101,7 @@ PUB BlockUpdateEnabled(enabled) | tmp
         0, 1:
             enabled := (||(enabled) & 1) << core#BDU
         other:
-            result := ((tmp >> core#BDU) & 1) * TRUE
+            result := ((tmp >> core#BDU) & 1) == 1
             return
 
     tmp &= core#BDU_MASK
@@ -146,7 +146,7 @@ PUB FIFOEnabled(enabled) | tmp
         0, 1:
             enabled := (||(enabled) & 1) << core#FIFO_EN
         other:
-            result := ((tmp >> core#FIFO_EN) & 1) * TRUE
+            result := ((tmp >> core#FIFO_EN) & 1) == 1
             return
 
     tmp &= core#FIFO_EN_MASK
@@ -186,7 +186,7 @@ PUB GyroDataOverrun{}
     result := 0
     readreg(core#STATUS_REG, 1, @result)
     result := (result >> core#ZYXOR) & 1
-    result := result * TRUE
+    result := (result == 1)
 
 PUB GyroDataRate(Hz) | tmp
 ' Set rate of data output, in Hz
@@ -281,7 +281,7 @@ PUB HighPassFilterEnabled(enabled) | tmp
         0, 1:
             enabled := (||(enabled) & 1) << core#HPEN
         other:
-            result := ((tmp >> core#HPEN) & 1) * TRUE
+            result := ((tmp >> core#HPEN) & 1) == 1
             return
 
     tmp &= core#HPEN_MASK
