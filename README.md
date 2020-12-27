@@ -9,7 +9,7 @@ This is a P8X32A/Propeller driver object for the STMicroelectronics L3G4200D 3Do
 
 * SPI connection at up to 1MHz
 * Read device ID (who am i)
-* Read Gyroscope data (raw, or calculated in millionths of a degree per second)
+* Read Gyroscope data (raw, or calculated in micro-degrees per second)
 * Read flags for data ready or overrun
 * Set operation mode (powerdown, sleep, normal/active)
 * Set output data rate
@@ -29,7 +29,7 @@ P1/SPIN1:
 ## Compiler Compatibility
 
 * P1/SPIN1: OpenSpin (tested with 1.00.81)
-* ~~P2/SPIN2: FastSpin (tested with 4.2.5-beta)~~ _(not implemented yet)_
+* ~~P2/SPIN2: FlexSpin (tested with 5.0.0)~~ _(not implemented yet)_
 * ~~BST~~ (incompatible - no preprocessor)
 * ~~Propeller Tool~~ (incompatible - no preprocessor)
 * ~~PNut~~ (incompatible - no preprocessor)

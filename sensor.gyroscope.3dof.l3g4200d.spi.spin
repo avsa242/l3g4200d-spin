@@ -54,17 +54,16 @@ OBJ
 PUB Null{}
 ' This is not a top-level object
 
-PUB Start(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN, SCK_DELAY): okay
+PUB Start(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN): okay
 
-    if SCK_DELAY => 1
-        if okay := spi.start(SCK_DELAY, core#CPOL)
-            longmove(@_CS, @CS_PIN, 4)          ' copy pins to hub vars
-            io.high(_CS)
-            io.output(_CS)
-            time.msleep(10)
+    if okay := spi.start(core#CLK_DELAY, core#CPOL)
+        longmove(@_CS, @CS_PIN, 4)              ' copy pins to hub vars
+        io.high(_CS)
+        io.output(_CS)
+        time.msleep(10)
 
-            if deviceid{} == core#DEVID_RESP
-                return okay
+        if deviceid{} == core#DEVID_RESP
+            return okay
 
     return FALSE                                ' something above failed
 
@@ -73,7 +72,7 @@ PUB Stop{}
     spi.stop{}
 
 PUB Defaults{}
-
+' Factory default settings
     blockupdateenabled(FALSE)
     databyteorder(LSBFIRST)
     fifoenabled(FALSE)
@@ -88,6 +87,11 @@ PUB Defaults{}
     int2mask(%0000)
     intactivestate(INTLVL_LOW)
     intoutputtype(INT_PP)
+
+PUB Defaults_Active{}
+' Like Defaults(), but place the sensor in active/normal mode
+    defaults{}
+    gyroopmode(NORMAL)
 
 PUB BlockUpdateEnabled(state): curr_state
 ' Enable block updates
@@ -410,20 +414,26 @@ PUB IntOutputType(type): curr_type
     type := ((curr_type & core#PP_OD_MASK) | type)
     writereg(core#CTRL_REG3, 1, @type)
 
-PUB Temperature{}: temp
+PUB TempData{}: temp
 ' Read device temperature
+'   Returns: s8
+'   NOTE: This temperature reading is the gyroscope die temperature,
+'       not an ambient temperature reading. It is meant to be used as
+'       a relative change in temperature, not an absolute temperature
+'       reading
     readreg(core#OUT_TEMP, 1, @temp)
+    return ~temp
 
 PRI readReg(reg, nr_bytes, ptr_buff) | tmp
 ' Read nr_bytes from device into ptr_buff
     case reg
+        $28..$2D:                               ' prioritize output data regs
+            reg |= MS                           ' indicate multi-byte xfer
         $0F, $20..$27, $2E..$38:
-        $28..$2D:
-            reg |= MS
         other:
-            return FALSE
+            return
 
-    reg |= R
+    reg |= R                                    ' indicate read xfer
     io.low(_CS)
     spi.shiftout(_MOSI, _SCK, core#MOSI_BITORDER, 8, reg)
 
@@ -436,14 +446,13 @@ PRI writeReg(reg, nr_bytes, ptr_buff) | tmp
     case reg
         $20..$25, $2E, $30, $32..$38:
         other:
-            return FALSE
+            return
 
     io.low(_CS)
     spi.shiftout(_MOSI, _SCK, core#MOSI_BITORDER, 8, reg)
 
     repeat tmp from 0 to nr_bytes-1
         spi.shiftout(_MOSI, _SCK, core#MOSI_BITORDER, 8, byte[ptr_buff][tmp])
-
     io.high(_CS)
 
 DAT
