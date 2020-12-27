@@ -5,7 +5,7 @@
     Description: Driver for the ST L3G4200D 3-axis gyroscope
     Copyright (c) 2020
     Started Nov 27, 2019
-    Updated Dec 24, 2020
+    Updated Dec 27, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -60,7 +60,7 @@ PUB Start(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN): okay
         longmove(@_CS, @CS_PIN, 4)              ' copy pins to hub vars
         io.high(_CS)
         io.output(_CS)
-        time.usleep(core#TPOR)
+        time.usleep(core#T_POR)
 
         if deviceid{} == core#DEVID_RESP
             return okay
@@ -216,6 +216,45 @@ PUB GyroDPS(ptr_x, ptr_y, ptr_z) | tmp[2]
     long[ptr_y] := (~~tmp.word[1] * _gyro_cnts_per_lsb)
     long[ptr_z] := (~~tmp.word[2] * _gyro_cnts_per_lsb)
 
+PUB GyroLowPassFilter(freq): curr_freq
+' Set gyroscope low-pass filter frequency, in Hz
+'   Valid values:
+'   When GyroDataRate() == ...:
+'       100: 12 (12.5), 25
+'       200: 12 (12.5), 25, 50, 70
+'       400: 20, 25, 50, 110
+'       800: 30, 35, 50, 110
+'   NOTE: Available values depend on current GyroDataRate()
+'   Any other value polls the chip and returns the current setting
+    curr_freq := 0
+    readreg(core#CTRL_REG1, 1, @curr_freq)
+    case freq
+        12{.5}, 20, 25, 30, 35, 50, 70, 110:
+            case gyrodatarate(-2)               ' effective LPF depends on ODR
+                100:
+                    freq := lookdownz(freq: 12, 25)
+                200:
+                    freq := lookdownz(freq: 12, 25, 50, 70)
+                400:
+                    freq := lookdownz(freq: 20, 25, 50, 110)
+                800:
+                    freq := lookdownz(freq: 30, 35, 50, 110)
+            freq <<= core#BW
+        other:
+            curr_freq := (curr_freq >> core#BW) & core#BW_BITS
+            case gyrodatarate(-2)
+                100:
+                    return lookupz(curr_freq: 12, 25, 25, 25)
+                200:
+                    return lookupz(curr_freq: 12, 25, 50, 70)
+                400:
+                    return lookupz(curr_freq: 20, 25, 50, 110)
+                800:
+                    return lookupz(curr_freq: 30, 35, 50, 110)
+
+    freq := ((curr_freq & core#BW_MASK) | freq) & core#CTRL_REG1_MASK
+    writereg(core#CTRL_REG1, 1, @freq)
+
 PUB GyroOpMode(mode): curr_mode
 ' Set operation mode
 '   Valid values:
@@ -288,7 +327,7 @@ PUB HighPassFilterFreq(freq): curr_freq
 '           Examples: 8_00 = 8Hz, 0_50 = 0.5Hz, 0_02 = 0.02Hz
     curr_freq := 0
     readreg(core#CTRL_REG2, 1, @curr_freq)
-    case GyroDataRate(-2)
+    case gyrodatarate(-2)
         100:
             case freq
                 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01:

@@ -61,7 +61,7 @@ PUB Main{} | gx, gy, gz
         ser.positionx(DAT_Z_COL)
         decimal(gz, 1_000_000)
 
-PUB Decimal(scaled, divisor) | whole[4], part[4], places, tmp, sign
+PRI Decimal(scaled, divisor) | whole[4], part[4], places, tmp, sign
 ' Display a scaled up number as a decimal
 '   Scale it back down by divisor (e.g., 10, 100, 1000, etc)
     whole := scaled / divisor                   ' separate the whole part
