@@ -60,7 +60,7 @@ PUB Start(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN): okay
         longmove(@_CS, @CS_PIN, 4)              ' copy pins to hub vars
         io.high(_CS)
         io.output(_CS)
-        time.msleep(10)
+        time.usleep(core#TPOR)
 
         if deviceid{} == core#DEVID_RESP
             return okay

@@ -16,9 +16,9 @@ CON
     CPOL                        = 1
     CLK_DELAY                   = 1
     SCK_MAX_FREQ                = 10_000_000
-    MOSI_BITORDER               = 5             'MSBFIRST
-    MISO_BITORDER               = 2             'MSBPRE
-
+    MOSI_BITORDER               = 5             ' MSBFIRST
+    MISO_BITORDER               = 2             ' MSBPRE
+    T_POR                       = 10_000        ' usec
     DEVID_RESP                  = $D3
 
 ' Register definitions
