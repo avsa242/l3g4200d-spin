@@ -21,8 +21,8 @@ CON
     DOF                 = ACCEL_DOF + GYRO_DOF + MAG_DOF + BARO_DOF
 
 ' SPI transaction bits
-    R                   = 1 << 7                ' read transaction
-    MS                  = 1 << 6                ' auto address increment
+    SPI_R               = 1 << 7                ' read transaction
+    SPI_MS              = 1 << 6                ' auto address increment
 
 ' High-pass filter modes
     #0, HPF_NORMAL_RES, HPF_REF, HPF_NORMAL, HPF_AUTO_RES
@@ -39,10 +39,17 @@ CON
 ' Gyro data byte order
     #0, LSBFIRST, MSBFIRST
 
+' Axis-specific symbols
+    #0, X_AXIS, Y_AXIS, Z_AXIS
+
+' Read/write
+    #0, R, W
+
 VAR
 
     long _gyro_cnts_per_lsb
     long _CS, _SCK, _MOSI, _MISO
+    long _gyro_bias[GYRO_DOF]
 
 OBJ
 
@@ -168,14 +175,42 @@ PUB GyroAxisEnabled(mask): curr_mask
     mask := ((curr_mask & core#XYZEN_MASK) | mask) & core#CTRL_REG1_MASK
     writereg(core#CTRL_REG1, 1, @mask)
 
+PUB GyroBias(x, y, z, rw)
+' Read or write/manually set Gyroscope calibration offset values
+'   Valid values:
+'       rw:
+'           R (0), W (1)
+'       x, y, z
+'           -32768..32767
+'   NOTE: When rw is set to READ, x, y, and z must be pointers to respective
+'       variables to hold the returned calibration offset values.
+    case rw
+        R:
+            longmove(x, @_gyro_bias[0], 3)
+        W:
+            case x
+                -32768..32767:
+                    _gyro_bias[X_AXIS] := x
+                other:
+
+            case y
+                -32768..32767:
+                    _gyro_bias[Y_AXIS] := y
+                other:
+
+            case z
+                -32768..32767:
+                    _gyro_bias[Z_AXIS] := z
+                other:
+
 PUB GyroData(ptr_x, ptr_y, ptr_z) | tmp[2]
 ' Read gyroscope data
     bytefill(@tmp, 0, 8)
     readreg(core#OUT_X_L, 6, @tmp)
 
-    long[ptr_x] := ~~tmp.word[0]
-    long[ptr_y] := ~~tmp.word[1]
-    long[ptr_z] := ~~tmp.word[2]
+    long[ptr_x] := ~~tmp.word[X_AXIS] + _gyro_bias[X_AXIS]
+    long[ptr_y] := ~~tmp.word[Y_AXIS] + _gyro_bias[X_AXIS]
+    long[ptr_z] := ~~tmp.word[Z_AXIS] + _gyro_bias[X_AXIS]
 
 PUB GyroDataOverrun{}: flag
 ' Flag indicating previously acquired data has been overwritten
@@ -209,12 +244,12 @@ PUB GyroDataReady{}: flag
 
 PUB GyroDPS(ptr_x, ptr_y, ptr_z) | tmp[2]
 ' Read gyroscope data, calculated
-'   Returns: Angular rate in millionths of a degree per second
+'   Returns: Angular rate in micro-degrees per second
     longfill(@tmp, 0, 2)
     readreg(core#OUT_X_L, 6, @tmp)
-    long[ptr_x] := (~~tmp.word[0] * _gyro_cnts_per_lsb)
-    long[ptr_y] := (~~tmp.word[1] * _gyro_cnts_per_lsb)
-    long[ptr_z] := (~~tmp.word[2] * _gyro_cnts_per_lsb)
+    long[ptr_x] := ((~~tmp.word[X_AXIS] + _gyro_bias[X_AXIS]) * _gyro_cnts_per_lsb)
+    long[ptr_y] := ((~~tmp.word[Y_AXIS] + _gyro_bias[Y_AXIS]) * _gyro_cnts_per_lsb)
+    long[ptr_z] := ((~~tmp.word[Z_AXIS] + _gyro_bias[Z_AXIS]) * _gyro_cnts_per_lsb)
 
 PUB GyroLowPassFilter(freq): curr_freq
 ' Set gyroscope low-pass filter frequency, in Hz
@@ -467,12 +502,12 @@ PRI readReg(reg, nr_bytes, ptr_buff) | tmp
 ' Read nr_bytes from device into ptr_buff
     case reg
         $28..$2D:                               ' prioritize output data regs
-            reg |= MS                           ' indicate multi-byte xfer
+            reg |= SPI_MS                       ' indicate multi-byte xfer
         $0F, $20..$27, $2E..$38:
         other:
             return
 
-    reg |= R                                    ' indicate read xfer
+    reg |= SPI_R                                ' indicate read xfer
     io.low(_CS)
     spi.shiftout(_MOSI, _SCK, core#MOSI_BITORDER, 8, reg)
 

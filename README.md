@@ -38,7 +38,8 @@ P1/SPIN1:
 * Very early in development - may malfunction, or outright fail to build
 
 ## TODO
-- [ ] Add calibration/offset support
+- [x] Add bias/offset support
+- [ ] Add calibration support
 - [ ] High-pass filter mode operation needs clarification on function/purpose
 - [ ] Add I2C support
 - [ ] Port to P2/SPIN2
