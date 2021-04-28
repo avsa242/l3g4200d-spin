@@ -19,10 +19,10 @@ CON
     LED         = cfg#LED1
     SER_BAUD    = 115_200
 
-    CS_PIN      = 4
-    SCL_PIN     = 1
-    SDA_PIN     = 2
-    SDO_PIN     = 3
+    CS_PIN      = 16
+    SCL_PIN     = 17
+    SDA_PIN     = 18
+    SDO_PIN     = 19
 ' --
 
     DAT_X_COL   = 15

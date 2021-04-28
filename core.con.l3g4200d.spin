@@ -3,9 +3,9 @@
     Filename: core.con.l3g4200d.spin
     Author: Jesse Burt
     Description: Low-level constants
-    Copyright (c) 2020
+    Copyright (c) 2021
     Started Nov 27, 2019
-    Updated Dec 24, 2020
+    Updated Apr 28, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -13,11 +13,8 @@
 CON
 
 ' SPI Configuration
-    CPOL                        = 1
-    CLK_DELAY                   = 1
     SCK_MAX_FREQ                = 10_000_000
-    MOSI_BITORDER               = 5             ' MSBFIRST
-    MISO_BITORDER               = 2             ' MSBPRE
+    SPI_MODE                    = 3
     T_POR                       = 10_000        ' usec
     DEVID_RESP                  = $D3
 
@@ -158,5 +155,5 @@ CON
         D_MASK                  = D_BITS ^ INT1_DURATION_MASK
 
 
-PUB Null
+PUB Null{}
 ' This is not a top-level object
