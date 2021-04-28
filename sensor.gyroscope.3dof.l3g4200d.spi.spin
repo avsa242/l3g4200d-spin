@@ -99,7 +99,7 @@ PUB Defaults{}
     intactivestate(INTLVL_LOW)
     intoutputtype(INT_PP)
 
-PUB Defaults_Active{}
+PUB Preset_Active{}
 ' Like Defaults(), but place the sensor in active/normal mode
     defaults{}
     gyroopmode(NORMAL)
