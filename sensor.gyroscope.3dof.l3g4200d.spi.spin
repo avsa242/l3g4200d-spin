@@ -121,6 +121,37 @@ PUB BlockUpdateEnabled(state): curr_state
     state := ((curr_state & core#BDU_MASK) | state)
     writereg(core#CTRL_REG4, 1, @state)
 
+PUB CalibrateGyro{} | tmp[GYRO_DOF], biastmp[GYRO_DOF], nr_samples, orig_scale, orig_datarate, orig_lpf
+' Calibrate the gyroscope
+    longfill(@tmp, 0, 10)                       ' Initialize variables to 0
+    orig_scale := gyroscale(-2)                 ' Preserve the user's original settings
+    orig_datarate := gyrodatarate(-2)
+    orig_lpf := gyrolowpassfilter(-2)
+
+    gyroscale(250)                              ' set to most sensitive scale,
+    gyrodatarate(800)                           '   fastest sample rate,
+    gyrolowpassfilter(30)                       '   and an LPF of 30Hz
+    gyrobias(0, 0, 0, W)                        ' reset gyroscope bias offsets
+    nr_samples := 800                           ' # samples to use for average
+
+    repeat nr_samples                           ' throw away first sample set
+        repeat until gyrodataready{}            '   to give time to settle
+        gyrodata(@tmp[X_AXIS], @tmp[Y_AXIS], @tmp[Z_AXIS])
+
+    repeat nr_samples                           ' accumulate, for each axis
+        repeat until gyrodataready{}
+        gyrodata(@tmp[X_AXIS], @tmp[Y_AXIS], @tmp[Z_AXIS])
+        biastmp[X_AXIS] -= tmp[X_AXIS]
+        biastmp[Y_AXIS] -= tmp[Y_AXIS]
+        biastmp[Z_AXIS] -= tmp[Z_AXIS]
+
+    gyrobias((biastmp[X_AXIS]/nr_samples), (biastmp[Y_AXIS]/nr_samples), {
+}   (biastmp[Z_AXIS]/nr_samples), W)
+
+    gyroscale(orig_scale)                       ' Restore user settings
+    gyrodatarate(orig_datarate)
+    gyrolowpassfilter(orig_lpf)
+
 PUB DataByteOrder(order): curr_ord
 ' Set byte order of gyro data
 '   Valid values:

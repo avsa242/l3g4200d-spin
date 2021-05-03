@@ -39,7 +39,7 @@ P1/SPIN1:
 
 ## TODO
 - [x] Add bias/offset support
-- [ ] Add calibration support
+- [x] Add calibration support
 - [ ] High-pass filter mode operation needs clarification on function/purpose
 - [ ] Add I2C support
 - [ ] Port to P2/SPIN2
