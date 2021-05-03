@@ -19,10 +19,10 @@ CON
     LED         = cfg#LED1
     SER_BAUD    = 115_200
 
-    CS_PIN      = 16
-    SCL_PIN     = 17
-    SDA_PIN     = 18
-    SDO_PIN     = 19
+    CS_PIN      = 0
+    SCL_PIN     = 1
+    SDA_PIN     = 2
+    SDO_PIN     = 3
 ' --
 
     DAT_X_COL   = 15
@@ -41,7 +41,7 @@ PUB Main{} | gx, gy, gz
 
     setup{}
 
-    l3g4200d.defaults_active{}
+    l3g4200d.preset_active{}
     ser.hidecursor{}
     ser.position(DAT_X_COL, 3)
     ser.char("X")

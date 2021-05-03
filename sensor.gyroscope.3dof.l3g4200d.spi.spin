@@ -47,7 +47,7 @@ CON
 
 VAR
 
-    long _gyro_cnts_per_lsb
+    long _gres
     long _CS, _SCK, _MOSI, _MISO
     long _gyro_bias[GYRO_DOF]
 
@@ -251,9 +251,9 @@ PUB GyroDPS(ptr_x, ptr_y, ptr_z) | tmp[2]
 '   Returns: Angular rate in micro-degrees per second
     longfill(@tmp, 0, 2)
     readreg(core#OUT_X_L, 6, @tmp)
-    long[ptr_x] := ((~~tmp.word[X_AXIS] + _gyro_bias[X_AXIS]) * _gyro_cnts_per_lsb)
-    long[ptr_y] := ((~~tmp.word[Y_AXIS] + _gyro_bias[Y_AXIS]) * _gyro_cnts_per_lsb)
-    long[ptr_z] := ((~~tmp.word[Z_AXIS] + _gyro_bias[Z_AXIS]) * _gyro_cnts_per_lsb)
+    long[ptr_x] := ((~~tmp.word[X_AXIS] + _gyro_bias[X_AXIS]) * _gres)
+    long[ptr_y] := ((~~tmp.word[Y_AXIS] + _gyro_bias[Y_AXIS]) * _gres)
+    long[ptr_z] := ((~~tmp.word[Z_AXIS] + _gyro_bias[Z_AXIS]) * _gres)
 
 PUB GyroLowPassFilter(freq): curr_freq
 ' Set gyroscope low-pass filter frequency, in Hz
@@ -330,7 +330,7 @@ PUB GyroScale(dps): curr_dps
     case dps
         250, 500, 2000:
             dps := lookdownz(dps: 250, 500, 2000) << core#FS
-            _gyro_cnts_per_lsb := lookupz(dps >> core#FS: 8_750, 17_500, 70_000)
+            _gres := lookupz(dps >> core#FS: 8_750, 17_500, 70_000)
         other:
             curr_dps := (curr_dps >> core#FS) & core#FS_BITS
             return lookupz(curr_dps: 250, 500, 2000)
