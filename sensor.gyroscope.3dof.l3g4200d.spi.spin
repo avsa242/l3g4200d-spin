@@ -5,7 +5,7 @@
     Description: Driver for the ST L3G4200D 3-axis gyroscope
     Copyright (c) 2021
     Started Nov 27, 2019
-    Updated Apr 28, 2021
+    Updated May 4, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -20,9 +20,23 @@ CON
     BARO_DOF            = 0
     DOF                 = ACCEL_DOF + GYRO_DOF + MAG_DOF + BARO_DOF
 
+' I2C settings
+    SLAVE_WR            = core#SLAVE_ADDR
+    SLAVE_RD            = core#SLAVE_ADDR|1
+
+    DEF_SCL             = 28
+    DEF_SDA             = 29
+    DEF_HZ              = 100_000
+    I2C_MAX_FREQ        = core#I2C_MAX_FREQ
+
 ' SPI transaction bits
     SPI_R               = 1 << 7                ' read transaction
-    SPI_MS              = 1 << 6                ' auto address increment
+
+#ifdef L3G4200D_SPI
+    MS                  = 1 << 6                ' auto address increment
+#elseifdef L3G4200D_I2C
+    MS                  = 1 << 7                ' auto address increment
+#endif
 
 ' High-pass filter modes
     #0, HPF_NORMAL_RES, HPF_REF, HPF_NORMAL, HPF_AUTO_RES
@@ -53,7 +67,14 @@ VAR
 
 OBJ
 
+#ifdef L3G4200D_SPI
     spi : "com.spi.4w"                          ' PASM SPI engine (1MHz)
+#elseifdef L3G4200D_I2C
+'    i2c : "com.i2c"        'XXX not functional yet
+    i2c : "tiny.com.i2c"
+#else
+#error "One of L3G4200D_SPI or L3G4200D_I2C must be defined"
+#endif
     core: "core.con.l3g4200d"                   ' HW-specific constants
     time: "time"                                ' timekeeping methods
     io  : "io"                                  ' I/O abstraction
@@ -61,8 +82,9 @@ OBJ
 PUB Null{}
 ' This is not a top-level object
 
-PUB Start(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN): status
-
+#ifdef L3G4200D_SPI
+PUB Startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN): status
+' Start using custom I/O settings
     if lookdown(CS_PIN: 0..31) and lookdown(SCK_PIN: 0..31) and {
 }   lookdown(MOSI_PIN: 0..31) and lookdown(MISO_PIN: 0..31)
         if (status := spi.init(SCK_PIN, MOSI_PIN, MISO_PIN, core#SPI_MODE))
@@ -77,13 +99,38 @@ PUB Start(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN): status
     ' Double check I/O pin assignments, connections, power
     ' Lastly - make sure you have at least one free core/cog
     return FALSE
+#elseifdef L3G4200D_I2C
+PUB Start{}: status
+' Start using "standard" Propeller I2C pins, and 100kHz bus speed
+    return startx(DEF_SCL, DEF_SDA, DEF_HZ)
+
+PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ): status
+' Start using custom I/O settings and bus speed
+    if lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) and {
+}   (I2C_HZ =< core#I2C_MAX_FREQ)
+'        if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
+        if (status := i2c.init(SCL_PIN, SDA_PIN))
+            time.usleep(core#T_POR)             ' wait for device startup
+
+            if deviceid{} == core#DEVID_RESP    ' validate device
+                return
+    ' if this point is reached, something above failed
+    ' Double check I/O pin assignments, connections, power
+    ' Lastly - make sure you have at least one free core/cog
+    return FALSE
+#endif
 
 PUB Stop{}
 
+#ifdef L3G4200D_SPI
     spi.deinit{}
+#elseifdef L3G4200D_I2C
+    i2c.deinit{}
+#endif
 
-PUB Defaults{}
+PUB Defaults{} | tmp
 ' Factory default settings
+
     blockupdateenabled(FALSE)
     databyteorder(LSBFIRST)
     fifoenabled(FALSE)
@@ -103,6 +150,8 @@ PUB Preset_Active{}
 ' Like Defaults(), but place the sensor in active/normal mode
     defaults{}
     gyroopmode(NORMAL)
+    blockupdateenabled(TRUE)
+    int2mask(%1000)
 
 PUB BlockUpdateEnabled(state): curr_state
 ' Enable block updates
@@ -533,32 +582,54 @@ PUB TempData{}: temp
     readreg(core#OUT_TEMP, 1, @temp)
     return ~temp
 
-PRI readReg(reg_nr, nr_bytes, ptr_buff)
+PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 ' Read nr_bytes from device into ptr_buff
     case reg_nr
         $28..$2D:                               ' prioritize output data regs
-            reg_nr |= SPI_MS                    ' indicate multi-byte xfer
+            reg_nr |= MS                        ' indicate multi-byte xfer
         $0F, $20..$27, $2E..$38:
         other:
             return
 
+#ifdef L3G4200D_SPI
     reg_nr |= SPI_R                             ' indicate read xfer
     io.low(_CS)
     spi.wr_byte(reg_nr)
     spi.rdblock_lsbf(ptr_buff, nr_bytes)
     io.high(_CS)
+#elseifdef L3G4200D_I2C
+    cmd_pkt.byte[0] := SLAVE_WR
+    cmd_pkt.byte[1] := reg_nr
+    i2c.start{}
+    i2c.wrblock_lsbf(@cmd_pkt, 2)
+    i2c.stop{}
 
-PRI writeReg(reg_nr, nr_bytes, ptr_buff)
+    i2c.start{}
+    i2c.write(SLAVE_RD)
+    i2c.rdblock_lsbf(ptr_buff, nr_bytes, i2c#NAK)
+    i2c.stop{}
+#endif
+
+PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 ' Write nr_bytes to device from ptr_buff
     case reg_nr
         $20..$25, $2E, $30, $32..$38:
         other:
             return
 
+#ifdef L3G4200D_SPI
     io.low(_CS)
     spi.wr_byte(reg_nr)
     spi.wrblock_lsbf(ptr_buff, nr_bytes)
     io.high(_CS)
+#elseifdef L3G4200D_I2C
+    cmd_pkt.byte[0] := SLAVE_WR
+    cmd_pkt.byte[1] := reg_nr
+    i2c.start{}
+    i2c.wrblock_lsbf(@cmd_pkt, 2)
+    i2c.wrblock_lsbf(ptr_buff, nr_bytes)
+    i2c.stop{}
+#endif
 
 DAT
 {
