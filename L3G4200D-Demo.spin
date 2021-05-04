@@ -39,7 +39,7 @@ OBJ
     cfg     : "core.con.boardcfg.flip"
     ser     : "com.serial.terminal.ansi"
     time    : "time"
-    gyro    : "sensor.gyroscope.3dof.l3g4200d.spi"
+    gyro    : "sensor.gyroscope.3dof.l3g4200d.i2cspi"
     int     : "string.integer"
 
 PUB Main{}
