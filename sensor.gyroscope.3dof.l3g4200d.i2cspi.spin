@@ -45,7 +45,7 @@ CON
     #0, POWERDOWN, SLEEP, NORMAL
 
 ' Interrupt pin active states
-    #0, INTLVL_LOW, INTLVL_HIGH
+    #0, INTLVL_HIGH, INTLVL_LOW
 
 ' Interrupt pin output type
     #0, INT_PP, INT_OD
@@ -293,8 +293,8 @@ PUB GyroData(ptr_x, ptr_y, ptr_z) | tmp[2]
     readreg(core#OUT_X_L, 6, @tmp)
 
     long[ptr_x] := ~~tmp.word[X_AXIS] + _gyro_bias[X_AXIS]
-    long[ptr_y] := ~~tmp.word[Y_AXIS] + _gyro_bias[X_AXIS]
-    long[ptr_z] := ~~tmp.word[Z_AXIS] + _gyro_bias[X_AXIS]
+    long[ptr_y] := ~~tmp.word[Y_AXIS] + _gyro_bias[Y_AXIS]
+    long[ptr_z] := ~~tmp.word[Z_AXIS] + _gyro_bias[Z_AXIS]
 
 PUB GyroDataOverrun{}: flag
 ' Flag indicating previously acquired data has been overwritten
@@ -542,15 +542,15 @@ PUB Int2Mask(mask): curr_mask
 
 PUB IntActiveState(state): curr_state
 ' Set active state for interrupts
-'   Valid values: *INTLVL_LOW (0), INTLVL_HIGH (1)
+'   Valid values: *INTLVL_HIGH (0), INTLVL_LOW (1)
 '   Any other value polls the chip and returns the current setting
     curr_state := 0
     readreg(core#CTRL_REG3, 1, @curr_state)
     case state
-        INTLVL_LOW, INTLVL_HIGH:
-            state := ((state ^ 1) & 1) << core#H_LACTIVE
+        INTLVL_HIGH, INTLVL_LOW:
+            state <<= core#H_LACTIVE
         other:
-            return (((curr_state >> core#H_LACTIVE) ^ 1) & 1)
+            return ((curr_state >> core#H_LACTIVE) & 1)
 
     state := ((curr_state & core#H_LACTIVE_MASK) | state)
     writereg(core#CTRL_REG3, 1, @state)
