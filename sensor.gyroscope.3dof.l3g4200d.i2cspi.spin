@@ -1,11 +1,11 @@
 {
     --------------------------------------------
-    Filename: sensor.gyroscope.3dof.l3g4200d.spi.spin
+    Filename: sensor.gyroscope.3dof.l3g4200d.i2cspi.spin
     Author: Jesse Burt
     Description: Driver for the ST L3G4200D 3-axis gyroscope
     Copyright (c) 2021
     Started Nov 27, 2019
-    Updated May 4, 2021
+    Updated Jul 20, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -70,8 +70,8 @@ OBJ
 #ifdef L3G4200D_SPI
     spi : "com.spi.4w"                          ' PASM SPI engine (1MHz)
 #elseifdef L3G4200D_I2C
-'    i2c : "com.i2c"        'XXX not functional yet
-    i2c : "tiny.com.i2c"
+    i2c : "com.i2c"
+'    i2c : "tiny.com.i2c"
 #else
 #error "One of L3G4200D_SPI or L3G4200D_I2C must be defined"
 #endif
@@ -108,8 +108,8 @@ PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ): status
 ' Start using custom I/O settings and bus speed
     if lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) and {
 }   (I2C_HZ =< core#I2C_MAX_FREQ)
-'        if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
-        if (status := i2c.init(SCL_PIN, SDA_PIN))
+        if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
+'        if (status := i2c.init(SCL_PIN, SDA_PIN))
             time.usleep(core#T_POR)             ' wait for device startup
 
             if deviceid{} == core#DEVID_RESP    ' validate device

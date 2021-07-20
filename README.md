@@ -7,7 +7,7 @@ This is a P8X32A/Propeller driver object for the STMicroelectronics L3G4200D 3Do
 
 ## Salient Features
 
-* I2C connection at ~30kHz, SPI connection at up to 1MHz
+* I2C connection at 400kHz, SPI connection at up to 1MHz
 * Read Gyroscope data (raw, or calculated in micro-degrees per second)
 * Read flags for data ready or overrun
 * Set operation mode (powerdown, sleep, normal/active)
@@ -21,6 +21,8 @@ This is a P8X32A/Propeller driver object for the STMicroelectronics L3G4200D 3Do
 
 P1/SPIN1:
 * spin-standard-library
+* P1/SPIN1: 1 extra core/cog for the PASM I2C driver
+_or_
 * P1/SPIN1: 1 extra core/cog for the PASM SPI driver
 
 P2/SPIN2:
@@ -37,8 +39,6 @@ P2/SPIN2:
 ## Limitations
 
 * Very early in development - may malfunction, or outright fail to build
-* Due to issues with the PASM I2C engine, only a bytecode SPIN PASM engine is currently
-implemented for I2C support (*P1 only - P2 I2C is fully functional*)
 
 ## TODO
 - [x] Add bias/offset support
@@ -46,4 +46,5 @@ implemented for I2C support (*P1 only - P2 I2C is fully functional*)
 - [ ] High-pass filter mode operation needs clarification on function/purpose
 - [x] Add I2C support
 - [x] Port to P2/SPIN2
+- [ ] Add compile-time support for spin-based I2C engine
 
