@@ -5,12 +5,13 @@
     Description: Simple demo of the L3G4200D driver
     Copyright (c) 2021
     Started Nov 27, 2019
-    Updated May 4, 2021
+    Updated Aug 14, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
-' Uncomment one of the below to choose I2C or SPI interface
-#define L3G4200D_I2C
+' Uncomment one of the below to choose I2C (PASM or SPIN) or SPI interface
+#define L3G4200D_I2C_PASM
+'#define L3G4200D_I2C_SPIN
 '#define L3G4200D_SPI
 
 CON
@@ -27,7 +28,7 @@ CON
     SDA_PIN     = 2                             ' SPI, I2C
     SDO_PIN     = 3                             ' SPI
 
-    I2C_HZ      = 400_000                       ' max is 400_000 XXX not currently functional
+    I2C_HZ      = 400_000                       ' max is 400_000
 ' --
 
     DAT_X_COL   = 15
@@ -112,9 +113,12 @@ PUB Setup{}
 #ifdef L3G4200D_SPI
     if gyro.startx(CS_PIN, SCL_PIN, SDA_PIN, SDO_PIN)
         ser.strln(string("L3G4200D driver started (SPI)"))
-#elseifdef L3G4200D_I2C
+#elseifdef L3G4200D_I2C_PASM
     if gyro.startx(SCL_PIN, SDA_PIN, I2C_HZ)
-        ser.strln(string("L3G4200D driver started (I2C)"))
+        ser.strln(string("L3G4200D driver started (I2C-PASM)"))
+#elseifdef L3G4200D_I2C_SPIN
+    if gyro.startx(SCL_PIN, SDA_PIN)
+        ser.strln(string("L3G4200D driver started (I2C-SPIN)"))
 #endif
     else
         ser.strln(string("L3G4200D driver failed to start - halting"))
