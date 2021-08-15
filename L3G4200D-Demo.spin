@@ -5,7 +5,7 @@
     Description: Simple demo of the L3G4200D driver
     Copyright (c) 2021
     Started Nov 27, 2019
-    Updated Aug 14, 2021
+    Updated Aug 15, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -110,6 +110,7 @@ PUB Setup{}
     time.msleep(30)
     ser.clear{}
     ser.strln(string("Serial terminal started"))
+
 #ifdef L3G4200D_SPI
     if gyro.startx(CS_PIN, SCL_PIN, SDA_PIN, SDO_PIN)
         ser.strln(string("L3G4200D driver started (SPI)"))
@@ -117,7 +118,7 @@ PUB Setup{}
     if gyro.startx(SCL_PIN, SDA_PIN, I2C_HZ)
         ser.strln(string("L3G4200D driver started (I2C-PASM)"))
 #elseifdef L3G4200D_I2C_SPIN
-    if gyro.startx(SCL_PIN, SDA_PIN)
+    if gyro.startx(SCL_PIN, SDA_PIN, I2C_HZ)
         ser.strln(string("L3G4200D driver started (I2C-SPIN)"))
 #endif
     else

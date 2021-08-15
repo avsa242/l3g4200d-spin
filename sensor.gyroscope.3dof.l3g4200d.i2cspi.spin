@@ -5,7 +5,7 @@
     Description: Driver for the ST L3G4200D 3-axis gyroscope
     Copyright (c) 2021
     Started Nov 27, 2019
-    Updated Aug 14, 2021
+    Updated Aug 15, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -104,7 +104,8 @@ PUB Startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN): status
     ' Double check I/O pin assignments, connections, power
     ' Lastly - make sure you have at least one free core/cog
     return FALSE
-#elseifdef L3G4200D_I2C_PASM
+
+#elseifdef L3G4200D_I2C
 PUB Start{}: status
 ' Start using "standard" Propeller I2C pins, and 100kHz bus speed
     return startx(DEF_SCL, DEF_SDA, DEF_HZ)
@@ -114,26 +115,7 @@ PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ): status
     if lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) and {
 }   (I2C_HZ =< core#I2C_MAX_FREQ)
         if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
-'        if (status := i2c.init(SCL_PIN, SDA_PIN))
             time.usleep(core#T_POR)             ' wait for device startup
-
-            if deviceid{} == core#DEVID_RESP    ' validate device
-                return
-    ' if this point is reached, something above failed
-    ' Double check I/O pin assignments, connections, power
-    ' Lastly - make sure you have at least one free core/cog
-    return FALSE
-#elseifdef L3G4200D_I2C_SPIN
-PUB Start{}: status
-' Start using "standard" Propeller I2C pins, and ~30kHz bus speed
-    return startx(DEF_SCL, DEF_SDA)
-
-PUB Startx(SCL_PIN, SDA_PIN): status
-' Start using custom I/O settings and bus speed
-    if lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31)
-        if (status := i2c.init(SCL_PIN, SDA_PIN))
-            time.usleep(core#T_POR)             ' wait for device startup
-
             if deviceid{} == core#DEVID_RESP    ' validate device
                 return
     ' if this point is reached, something above failed
