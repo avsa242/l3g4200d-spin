@@ -12,15 +12,15 @@
 
 CON
 
-' Indicate to user apps how many Degrees of Freedom each sub-sensor has
-'   (also imply whether or not it has a particular sensor)
+{ Indicate to user apps how many Degrees of Freedom each sub-sensor has }
+{   (also imply whether or not it has a particular sensor) }
     ACCEL_DOF           = 0
     GYRO_DOF            = 3
     MAG_DOF             = 0
     BARO_DOF            = 0
     DOF                 = ACCEL_DOF + GYRO_DOF + MAG_DOF + BARO_DOF
 
-' I2C settings
+{ I2C settings }
     SLAVE_WR            = core.SLAVE_ADDR
     SLAVE_RD            = core.SLAVE_ADDR|1
 
@@ -29,7 +29,7 @@ CON
     DEF_HZ              = 100_000
     I2C_MAX_FREQ        = core.I2C_MAX_FREQ
 
-' SPI transaction bits
+{ SPI transaction bits }
     SPI_R               = 1 << 7                ' read transaction
 
 #ifdef L3G4200D_SPI
@@ -38,25 +38,25 @@ CON
     MS                  = 1 << 7                ' auto address increment
 #endif
 
-' High-pass filter modes
+{ High-pass filter modes }
     #0, HPF_NORMAL_RES, HPF_REF, HPF_NORMAL, HPF_AUTO_RES
 
-' Operation modes
+{ Operation modes }
     #0, POWERDOWN, SLEEP, NORMAL
 
-' Interrupt pin active states
+{ Interrupt pin active states }
     #0, INTLVL_HIGH, INTLVL_LOW
 
-' Interrupt pin output type
+{ Interrupt pin output type }
     #0, INT_PP, INT_OD
 
-' Gyro data byte order
+{ Gyro data byte order }
     #0, LSBFIRST, MSBFIRST
 
-' Axis-specific symbols
+{ Axis-specific symbols }
     #0, X_AXIS, Y_AXIS, Z_AXIS
 
-' Read/write
+{ Read/write }
     #0, R, W
 
 VAR
@@ -93,9 +93,9 @@ PUB Startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN, SPI_HZ=1_000_000): status
 
             if deviceid() == core.DEVID_RESP    ' validate device
                 return
-    ' if this point is reached, something above failed
-    ' Double check I/O pin assignments, connections, power
-    ' Lastly - make sure you have at least one free core/cog
+    { if this point is reached, something above failed }
+    { Double check I/O pin assignments, connections, power }
+    { Lastly - make sure you have at least one free core/cog }
     return FALSE
 #elseifdef L3G4200D_I2C
 PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ): status
@@ -107,9 +107,9 @@ PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ): status
 
             if deviceid() == core.DEVID_RESP    ' validate device
                 return
-    ' if this point is reached, something above failed
-    ' Double check I/O pin assignments, connections, power
-    ' Lastly - make sure you have at least one free core/cog
+    { if this point is reached, something above failed }
+    { Double check I/O pin assignments, connections, power }
+    { Lastly - make sure you have at least one free core/cog }
     return FALSE
 #endif
 
@@ -213,7 +213,7 @@ PUB DataByteOrder(order): curr_ord
     writereg(core.CTRL_REG4, 1, @order)
 
 PUB DeviceID(): id
-' Read Device ID (who am I)
+' Read Device ID
 '   Known values: $D3
     id := 0
     readreg(core.WHO_AM_I, 1, @id)
@@ -431,10 +431,14 @@ PUB HighPassFilterEnabled(state): curr_state
 PUB HighPassFilterFreq(freq): curr_freq
 ' Set high-pass filter frequency, in Hz
 '    Valid values:
-'       If ODR=100Hz: *8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01
-'       If ODR=200Hz: *15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02
-'       If ODR=400Hz: *30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05
-'       If ODR=800Hz: *56_00, 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10
+'       if GyroDataRate() == 100:
+'           *8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01
+'       GyroDataRate() == 200:
+'           *15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02
+'       GyroDataRate() == 400:
+'           *30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05
+'       GyroDataRate() == 800:
+'           *56_00, 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10
 '       NOTE: Values are fractional values expressed as whole numbers. The '_' should be interpreted as a decimal point.
 '           Examples: 8_00 = 8Hz, 0_50 = 0.5Hz, 0_02 = 0.02Hz
     curr_freq := 0
@@ -497,11 +501,9 @@ PUB HighPassFilterMode(mode): curr_mode
 PUB Int1Mask(mask): curr_mask
 ' Set interrupt/function mask for INT1 pin
 '   Valid values:
-'       Bit 10   10
-'           ||   ||
-'    Range %00..%11
-'       Bit 1: Interrupt enable (*0: Disable, 1: Enable)
-'       Bit 0: Boot status (*0: Disable, 1: Enable)
+'       Bits: 1..0
+'       1: Interrupt enable (*0: Disable, 1: Enable)
+'       0: Boot status (*0: Disable, 1: Enable)
     curr_mask := 0
     readreg(core.CTRL_REG3, 1, @curr_mask)
     case mask
@@ -516,13 +518,11 @@ PUB Int1Mask(mask): curr_mask
 PUB Int2Mask(mask): curr_mask
 ' Set interrupt/function mask for INT2 pin
 '   Valid values:
-'       Bit 3210   3210
-'           ||||   ||||
-'    Range %0000..%1111 (default value: %0000)
-'       Bit 3: Data ready
-'       Bit 2: FIFO watermark
-'       Bit 1: FIFO overrun
-'       Bit 0: FIFO empty
+'       Bits: 3..0
+'       3: Data ready (default: 0)
+'       2: FIFO watermark (default: 0)
+'       1: FIFO overrun (default: 0)
+'       0: FIFO empty (default: 0)
     curr_mask := 0
     readreg(core.CTRL_REG3, 1, @curr_mask)
     case mask
