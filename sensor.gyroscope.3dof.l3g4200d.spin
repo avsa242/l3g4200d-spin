@@ -66,7 +66,7 @@ CON
 VAR
 
     long _gres
-    long _CS, _SCK, _MOSI, _MISO
+    long _CS
     long _gyro_bias[GYRO_DOF]
 
 OBJ
