@@ -89,15 +89,15 @@ PUB Null{}
 #ifdef L3G4200D_SPI
 PUB Startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN): status
 ' Start using custom I/O settings
-    if lookdown(CS_PIN: 0..31) and lookdown(SCK_PIN: 0..31) and {
-}   lookdown(MOSI_PIN: 0..31) and lookdown(MISO_PIN: 0..31)
+    if (lookdown(CS_PIN: 0..31) and lookdown(SCK_PIN: 0..31) and {
+}   lookdown(MOSI_PIN: 0..31) and lookdown(MISO_PIN: 0..31))
         if (status := spi.init(SCK_PIN, MOSI_PIN, MISO_PIN, core#SPI_MODE))
             longmove(@_CS, @CS_PIN, 4)          ' copy pins to hub vars
             outa[_CS] := 1
             dira[_CS] := 1
             time.usleep(core#T_POR)             ' wait for device startup
 
-            if deviceid{} == core#DEVID_RESP    ' validate device
+            if (deviceid{} == core#DEVID_RESP)  ' validate device
                 return
     { if this point is reached, something above failed }
     { Double check I/O pin assignments, connections, power }
@@ -111,11 +111,11 @@ PUB Start{}: status
 
 PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ): status
 ' Start using custom I/O settings and bus speed
-    if lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) and {
-}   (I2C_HZ =< core#I2C_MAX_FREQ)
+    if (lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) and {
+}   (I2C_HZ =< core#I2C_MAX_FREQ))
         if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
             time.usleep(core#T_POR)             ' wait for device startup
-            if deviceid{} == core#DEVID_RESP    ' validate device
+            if (deviceid{} == core#DEVID_RESP)    ' validate device
                 return
     { if this point is reached, something above failed }
     { Double check I/O pin assignments, connections, power }
@@ -397,7 +397,7 @@ PUB GyroOpMode(mode): curr_mode
             curr_mode &= core#PD_MASK
         other:
             curr_mode := (curr_mode >> core#PD) & 1
-            if curr_mode & core#XYZEN_BITS
+            if (curr_mode & core#XYZEN_BITS)
                 curr_mode += 1
             return
 
