@@ -3,9 +3,9 @@
     Filename: sensor.gyroscope.3dof.l3g4200d.i2cspi.spin
     Author: Jesse Burt
     Description: Driver for the ST L3G4200D 3-axis gyroscope
-    Copyright (c) 2021
+    Copyright (c) 2022
     Started Nov 27, 2019
-    Updated Aug 15, 2021
+    Updated Mar 29, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -423,7 +423,7 @@ PUB GyroScale(dps): curr_dps
     writereg(core#CTRL_REG4, 1, @dps)
 
 PUB HighPassFilterEnabled(state): curr_state
-' Enable high-pass filter for gyro data
+' Enable high-pass filter for gyro data, to mitigate long-term drift
 '   Valid values:
 '      *FALSE (0): High-pass filter disabled
 '       TRUE (-1 or 1): High-pass filter state
