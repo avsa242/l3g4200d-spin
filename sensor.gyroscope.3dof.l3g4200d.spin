@@ -12,14 +12,6 @@
 
 CON
 
-{ Indicate to user apps how many Degrees of Freedom each sub-sensor has }
-{   (also imply whether or not it has a particular sensor) }
-    ACCEL_DOF           = 0
-    GYRO_DOF            = 3
-    MAG_DOF             = 0
-    BARO_DOF            = 0
-    DOF                 = ACCEL_DOF + GYRO_DOF + MAG_DOF + BARO_DOF
-
 { I2C settings }
     SLAVE_WR            = core#SLAVE_ADDR
     SLAVE_RD            = core#SLAVE_ADDR|1
@@ -28,6 +20,22 @@ CON
     DEF_SDA             = 29
     DEF_HZ              = 100_000
     I2C_MAX_FREQ        = core#I2C_MAX_FREQ
+
+{ Indicate to user apps how many Degrees of Freedom each sub-sensor has }
+{   (also imply whether or not it has a particular sensor) }
+    ACCEL_DOF           = 0
+    GYRO_DOF            = 3
+    MAG_DOF             = 0
+    BARO_DOF            = 0
+    DOF                 = ACCEL_DOF + GYRO_DOF + MAG_DOF + BARO_DOF
+
+' Scales and data rates used during calibration/bias/offset process
+    CAL_XL_SCL          = 0
+    CAL_G_SCL           = 250
+    CAL_M_SCL           = 0
+    CAL_XL_DR           = 0
+    CAL_G_DR            = 200
+    CAL_M_DR            = 0
 
 { SPI transaction bits }
     SPI_R               = 1 << 7                ' read transaction
@@ -173,36 +181,40 @@ PUB BlockUpdateEnabled(state): curr_state
     state := ((curr_state & core#BDU_MASK) | state)
     writereg(core#CTRL_REG4, 1, @state)
 
-PUB CalibrateGyro{} | tmp[GYRO_DOF], biastmp[GYRO_DOF], nr_samples, orig_scale, orig_datarate, orig_lpf
+PUB CalibrateGyro{} | axis, orig_scl, orig_dr, biastmp[GYRO_DOF], tmp[GYRO_DOF], samples
 ' Calibrate the gyroscope
-    longfill(@tmp, 0, 10)                       ' Initialize variables to 0
-    orig_scale := gyroscale(-2)                 ' Preserve the user's original settings
-    orig_datarate := gyrodatarate(-2)
-    orig_lpf := gyrolowpassfilter(-2)
+    longfill(@axis, 0, 10)                      ' initialize vars to 0
+    orig_scl := gyroscale(-2)                   ' save user's current settings
+    orig_dr := gyrodatarate(-2)
+    gyrobias(0, 0, 0, W)                        ' clear existing bias
 
-    gyroscale(250)                              ' set to most sensitive scale,
-    gyrodatarate(800)                           '   fastest sample rate,
-    gyrolowpassfilter(30)                       '   and an LPF of 30Hz
+    { set sensor to CAL_G_SCL range, CAL_G_DR Hz data rate }
+    gyroscale(CAL_G_SCL)
+    gyrodatarate(CAL_G_DR)
     gyrobias(0, 0, 0, W)                        ' reset gyroscope bias offsets
-    nr_samples := 800                           ' # samples to use for average
+    samples := CAL_G_DR                         ' samples = DR, for 1 sec time
 
-    repeat nr_samples                           ' throw away first sample set
-        repeat until gyrodataready{}            '   to give time to settle
-        gyrodata(@tmp[X_AXIS], @tmp[Y_AXIS], @tmp[Z_AXIS])
-
-    repeat nr_samples                           ' accumulate, for each axis
+    { throw away first sample set to give time to settle }
+    repeat samples
         repeat until gyrodataready{}
         gyrodata(@tmp[X_AXIS], @tmp[Y_AXIS], @tmp[Z_AXIS])
-        biastmp[X_AXIS] -= tmp[X_AXIS]
-        biastmp[Y_AXIS] -= tmp[Y_AXIS]
-        biastmp[Z_AXIS] -= tmp[Z_AXIS]
 
-    gyrobias((biastmp[X_AXIS]/nr_samples), (biastmp[Y_AXIS]/nr_samples), {
-}   (biastmp[Z_AXIS]/nr_samples), W)
+    { accumulate and average approx. 1sec worth of samples }
+    repeat samples
+        repeat until gyrodataready{}
+        gyrodata(@tmp[X_AXIS], @tmp[Y_AXIS], @tmp[Z_AXIS])
+        biastmp[X_AXIS] += tmp[X_AXIS]
+        biastmp[Y_AXIS] += tmp[Y_AXIS]
+        biastmp[Z_AXIS] += tmp[Z_AXIS]
 
-    gyroscale(orig_scale)                       ' Restore user settings
-    gyrodatarate(orig_datarate)
-    gyrolowpassfilter(orig_lpf)
+    repeat axis from X_AXIS to Z_AXIS           ' calc avg
+        biastmp[axis] /= samples
+
+    { update offsets }
+    gyrobias(biastmp[X_AXIS], biastmp[Y_AXIS], biastmp[Z_AXIS], W)
+
+    gyroscale(orig_scl)                         ' restore user's settings
+    gyrodatarate(orig_dr)
 
 PUB DataByteOrder(order): curr_ord
 ' Set byte order of gyro data
@@ -279,12 +291,10 @@ PUB GyroBias(x, y, z, rw)
                 -32768..32767:
                     _gyro_bias[X_AXIS] := x
                 other:
-
             case y
                 -32768..32767:
                     _gyro_bias[Y_AXIS] := y
                 other:
-
             case z
                 -32768..32767:
                     _gyro_bias[Z_AXIS] := z
@@ -295,9 +305,9 @@ PUB GyroData(ptr_x, ptr_y, ptr_z) | tmp[2]
     bytefill(@tmp, 0, 8)
     readreg(core#OUT_X_L, 6, @tmp)
 
-    long[ptr_x] := (~~tmp.word[X_AXIS] + _gyro_bias[X_AXIS])
-    long[ptr_y] := (~~tmp.word[Y_AXIS] + _gyro_bias[Y_AXIS])
-    long[ptr_z] := (~~tmp.word[Z_AXIS] + _gyro_bias[Z_AXIS])
+    long[ptr_x] := (~~tmp.word[X_AXIS] - _gyro_bias[X_AXIS])
+    long[ptr_y] := (~~tmp.word[Y_AXIS] - _gyro_bias[Y_AXIS])
+    long[ptr_z] := (~~tmp.word[Z_AXIS] - _gyro_bias[Z_AXIS])
 
 PUB GyroDataOverrun{}: flag
 ' Flag indicating previously acquired data has been overwritten
@@ -334,9 +344,9 @@ PUB GyroDPS(ptr_x, ptr_y, ptr_z) | tmp[2]
 '   Returns: Angular rate in micro-degrees per second
     longfill(@tmp, 0, 2)
     readreg(core#OUT_X_L, 6, @tmp)
-    long[ptr_x] := ((~~tmp.word[X_AXIS] + _gyro_bias[X_AXIS]) * _gres)
-    long[ptr_y] := ((~~tmp.word[Y_AXIS] + _gyro_bias[Y_AXIS]) * _gres)
-    long[ptr_z] := ((~~tmp.word[Z_AXIS] + _gyro_bias[Z_AXIS]) * _gres)
+    long[ptr_x] := ((~~tmp.word[X_AXIS] - _gyro_bias[X_AXIS]) * _gres)
+    long[ptr_y] := ((~~tmp.word[Y_AXIS] - _gyro_bias[Y_AXIS]) * _gres)
+    long[ptr_z] := ((~~tmp.word[Z_AXIS] - _gyro_bias[Z_AXIS]) * _gres)
 
 PUB GyroLowPassFilter(freq): curr_freq
 ' Set gyroscope low-pass filter frequency, in Hz
