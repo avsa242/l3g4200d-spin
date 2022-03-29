@@ -82,7 +82,6 @@ OBJ
 #endif
     core: "core.con.l3g4200d"                   ' HW-specific constants
     time: "time"                                ' timekeeping methods
-    io  : "io"                                  ' I/O abstraction
 
 PUB Null{}
 ' This is not a top-level object
@@ -94,8 +93,8 @@ PUB Startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN): status
 }   lookdown(MOSI_PIN: 0..31) and lookdown(MISO_PIN: 0..31)
         if (status := spi.init(SCK_PIN, MOSI_PIN, MISO_PIN, core#SPI_MODE))
             longmove(@_CS, @CS_PIN, 4)          ' copy pins to hub vars
-            io.high(_CS)
-            io.output(_CS)
+            outa[_CS] := 1
+            dira[_CS] := 1
             time.usleep(core#T_POR)             ' wait for device startup
 
             if deviceid{} == core#DEVID_RESP    ' validate device
@@ -597,10 +596,10 @@ PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 
 #ifdef L3G4200D_SPI
     reg_nr |= SPI_R                             ' indicate read xfer
-    io.low(_CS)
+    outa[_CS] := 0
     spi.wr_byte(reg_nr)
     spi.rdblock_lsbf(ptr_buff, nr_bytes)
-    io.high(_CS)
+    outa[_CS] := 1
 #elseifdef L3G4200D_I2C
     cmd_pkt.byte[0] := SLAVE_WR
     cmd_pkt.byte[1] := reg_nr
@@ -622,10 +621,10 @@ PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
             return
 
 #ifdef L3G4200D_SPI
-    io.low(_CS)
+    outa[_CS] := 0
     spi.wr_byte(reg_nr)
     spi.wrblock_lsbf(ptr_buff, nr_bytes)
-    io.high(_CS)
+    outa[_CS] := 1
 #elseifdef L3G4200D_I2C
     cmd_pkt.byte[0] := SLAVE_WR
     cmd_pkt.byte[1] := reg_nr
