@@ -168,7 +168,7 @@ PUB BlockUpdateEnabled(state): curr_state
         0, 1:
             state := (||(state) & 1) << core#BDU
         other:
-            return ((curr_state >> core#BDU) & 1) == 1
+            return (((curr_state >> core#BDU) & 1) == 1)
 
     state := ((curr_state & core#BDU_MASK) | state)
     writereg(core#CTRL_REG4, 1, @state)
@@ -217,7 +217,7 @@ PUB DataByteOrder(order): curr_ord
         LSBFIRST, MSBFIRST:
             order <<= core#BLE
         other:
-            return (curr_ord >> core#BLE) & 1
+            return ((curr_ord >> core#BLE) & 1)
 
     order := ((curr_ord & core#BLE_MASK) | order)
     writereg(core#CTRL_REG4, 1, @order)
@@ -240,7 +240,7 @@ PUB FIFOEnabled(state): curr_state
         0, 1:
             state := (||(state) & 1) << core#FIFO_EN
         other:
-            return ((curr_state >> core#FIFO_EN) & 1) == 1
+            return (((curr_state >> core#FIFO_EN) & 1) == 1)
 
     state := ((curr_state & core#FIFO_EN_MASK) | state)
     writereg(core#CTRL_REG5, 1, @state)
@@ -257,7 +257,7 @@ PUB GyroAxisEnabled(mask): curr_mask
     case mask
         %000..%111:
         other:
-            return curr_mask & core#XYZEN_BITS
+            return (curr_mask & core#XYZEN_BITS)
 
     mask := ((curr_mask & core#XYZEN_MASK) | mask) & core#CTRL_REG1_MASK
     writereg(core#CTRL_REG1, 1, @mask)
@@ -295,16 +295,16 @@ PUB GyroData(ptr_x, ptr_y, ptr_z) | tmp[2]
     bytefill(@tmp, 0, 8)
     readreg(core#OUT_X_L, 6, @tmp)
 
-    long[ptr_x] := ~~tmp.word[X_AXIS] + _gyro_bias[X_AXIS]
-    long[ptr_y] := ~~tmp.word[Y_AXIS] + _gyro_bias[Y_AXIS]
-    long[ptr_z] := ~~tmp.word[Z_AXIS] + _gyro_bias[Z_AXIS]
+    long[ptr_x] := (~~tmp.word[X_AXIS] + _gyro_bias[X_AXIS])
+    long[ptr_y] := (~~tmp.word[Y_AXIS] + _gyro_bias[Y_AXIS])
+    long[ptr_z] := (~~tmp.word[Z_AXIS] + _gyro_bias[Z_AXIS])
 
 PUB GyroDataOverrun{}: flag
 ' Flag indicating previously acquired data has been overwritten
 '   Returns: TRUE (-1) if data has overrun/been overwritten, FALSE otherwise
     flag := 0
     readreg(core#STATUS_REG, 1, @flag)
-    return ((flag >> core#ZYXOR) & 1) == 1
+    return (((flag >> core#ZYXOR) & 1) == 1)
 
 PUB GyroDataRate(rate): curr_rate
 ' Set rate of data output, in Hz
@@ -327,7 +327,7 @@ PUB GyroDataReady{}: flag
 '   Returns: TRUE (-1) if data ready, FALSE otherwise
     flag := 0
     readreg(core#STATUS_REG, 1, @flag)
-    return ((flag >> core#ZYXDA) & 1) == 1
+    return (((flag >> core#ZYXDA) & 1) == 1)
 
 PUB GyroDPS(ptr_x, ptr_y, ptr_z) | tmp[2]
 ' Read gyroscope data, calculated
@@ -433,7 +433,7 @@ PUB HighPassFilterEnabled(state): curr_state
         0, 1:
             state := (||(state) & 1) << core#HPEN
         other:
-            return ((curr_state >> core#HPEN) & 1) == 1
+            return (((curr_state >> core#HPEN) & 1) == 1)
 
     state := ((curr_state & core#HPEN_MASK) | state)
     writereg(core#CTRL_REG5, 1, @state)
@@ -503,7 +503,7 @@ PUB HighPassFilterMode(mode): curr_mode
         HPF_NORMAL_RES, HPF_REF, HPF_NORMAL, HPF_AUTO_RES:
             mode <<= core#HPM
         other:
-            return (curr_mode >> core#HPM) & core#HPM_BITS
+            return ((curr_mode >> core#HPM) & core#HPM_BITS)
 
     mode := ((curr_mode & core#HPM_MASK) | mode)
     writereg(core#CTRL_REG2, 1, @mode)
@@ -520,7 +520,7 @@ PUB Int1Mask(mask): curr_mask
         %00..%11:
             mask <<= core#INT1
         other:
-            return (curr_mask >> core#INT1) & core#INT1_BITS
+            return ((curr_mask >> core#INT1) & core#INT1_BITS)
 
     mask := ((curr_mask & core#INT1_MASK) | mask)
     writereg(core#CTRL_REG3, 1, @mask)
@@ -538,7 +538,7 @@ PUB Int2Mask(mask): curr_mask
     case mask
         %0000..%1111:
         other:
-            return curr_mask & core#INT2_BITS
+            return (curr_mask & core#INT2_BITS)
 
     mask := ((curr_mask & core#INT2_MASK) | mask)
     writereg(core#CTRL_REG3, 1, @mask)
@@ -570,7 +570,7 @@ PUB IntOutputType(type): curr_type
         INT_PP, INT_OD:
             type := type << core#PP_OD
         other:
-            return (curr_type >> core#PP_OD) & 1
+            return ((curr_type >> core#PP_OD) & 1)
 
     type := ((curr_type & core#PP_OD_MASK) | type)
     writereg(core#CTRL_REG3, 1, @type)
