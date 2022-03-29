@@ -98,7 +98,7 @@ PUB Startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN, SPI_HZ=1_000_000): status
     { Lastly - make sure you have at least one free core/cog }
     return FALSE
 #elseifdef L3G4200D_I2C
-PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ): status
+PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ=DEF_HZ): status
 ' Start using custom I/O settings and bus speed
     if lookdown(SCL_PIN: 0..63) and lookdown(SDA_PIN: 0..63) and {
 }   (I2C_HZ <= core.I2C_MAX_FREQ)
@@ -146,7 +146,7 @@ PUB Preset_Active()
     blockupdateenabled(TRUE)
     int2mask(%1000)
 
-PUB BlockUpdateEnabled(state): curr_state
+PUB BlockUpdateEnabled(state=-2): curr_state
 ' Enable block updates
 '   Valid values:
 '      *FALSE (0): Update gyro data outputs continuously
@@ -166,9 +166,9 @@ PUB BlockUpdateEnabled(state): curr_state
 PUB CalibrateGyro() | tmp[GYRO_DOF], biastmp[GYRO_DOF], nr_samples, orig_scale, orig_datarate, orig_lpf
 ' Calibrate the gyroscope
     longfill(@tmp, 0, 10)                       ' Initialize variables to 0
-    orig_scale := gyroscale(-2)                 ' Preserve the user's original settings
-    orig_datarate := gyrodatarate(-2)
-    orig_lpf := gyrolowpassfilter(-2)
+    orig_scale := gyroscale()                   ' Preserve the user's original settings
+    orig_datarate := gyrodatarate()
+    orig_lpf := gyrolowpassfilter()
 
     gyroscale(250)                              ' set to most sensitive scale,
     gyrodatarate(800)                           '   fastest sample rate,
@@ -194,7 +194,7 @@ PUB CalibrateGyro() | tmp[GYRO_DOF], biastmp[GYRO_DOF], nr_samples, orig_scale, 
     gyrodatarate(orig_datarate)
     gyrolowpassfilter(orig_lpf)
 
-PUB DataByteOrder(order): curr_ord
+PUB DataByteOrder(order=-2): curr_ord
 ' Set byte order of gyro data
 '   Valid values:
 '      *LSBFIRST (0), MSBFIRST (1)
@@ -218,7 +218,7 @@ PUB DeviceID(): id
     id := 0
     readreg(core.WHO_AM_I, 1, @id)
 
-PUB FIFOEnabled(state): curr_state
+PUB FIFOEnabled(state=-2): curr_state
 ' Enable FIFO for gyro data
 '   Valid values:
 '      *FALSE (0): FIFO disabled
@@ -235,7 +235,7 @@ PUB FIFOEnabled(state): curr_state
     state := ((curr_state & core.FIFO_EN_MASK) | state)
     writereg(core.CTRL_REG5, 1, @state)
 
-PUB GyroAxisEnabled(mask): curr_mask
+PUB GyroAxisEnabled(mask=-2): curr_mask
 ' Enable gyroscope individual axes, by mask
 '   Valid values:
 '       0: Disable axis, 1: Enable axis
@@ -296,7 +296,7 @@ PUB GyroDataOverrun(): flag
     readreg(core.STATUS_REG, 1, @flag)
     return (((flag >> core.ZYXOR) & 1) == 1)
 
-PUB GyroDataRate(rate): curr_rate
+PUB GyroDataRate(rate=-2): curr_rate
 ' Set rate of data output, in Hz
 '   Valid values: *100, 200, 400, 800
 '   Any other value polls the chip and returns the current setting
@@ -328,7 +328,7 @@ PUB GyroDPS(ptr_x, ptr_y, ptr_z) | tmp[2]
     long[ptr_y] := (( (tmp.word[Y_AXIS] signx 15) + _gyro_bias[Y_AXIS]) * _gres)
     long[ptr_z] := (( (tmp.word[Z_AXIS] signx 15) + _gyro_bias[Z_AXIS]) * _gres)
 
-PUB GyroLowPassFilter(freq): curr_freq
+PUB GyroLowPassFilter(freq=-2): curr_freq
 ' Set gyroscope low-pass filter frequency, in Hz
 '   Valid values:
 '   When GyroDataRate() == ...:
@@ -342,7 +342,7 @@ PUB GyroLowPassFilter(freq): curr_freq
     readreg(core.CTRL_REG1, 1, @curr_freq)
     case freq
         12{.5}, 20, 25, 30, 35, 50, 70, 110:
-            case gyrodatarate(-2)               ' effective LPF depends on ODR
+            case gyrodatarate()                 ' effective LPF depends on ODR
                 100:
                     freq := lookdownz(freq: 12, 25)
                 200:
@@ -354,7 +354,7 @@ PUB GyroLowPassFilter(freq): curr_freq
             freq <<= core.BW
         other:
             curr_freq := (curr_freq >> core.BW) & core.BW_BITS
-            case gyrodatarate(-2)
+            case gyrodatarate()
                 100:
                     return lookupz(curr_freq: 12, 25, 25, 25)
                 200:
@@ -367,7 +367,7 @@ PUB GyroLowPassFilter(freq): curr_freq
     freq := ((curr_freq & core.BW_MASK) | freq) & core.CTRL_REG1_MASK
     writereg(core.CTRL_REG1, 1, @freq)
 
-PUB GyroOpMode(mode): curr_mode
+PUB GyroOpMode(mode=-2): curr_mode
 ' Set operation mode
 '   Valid values:
 '      *POWERDOWN (0): Power down - lowest power state
@@ -394,7 +394,7 @@ PUB GyroOpMode(mode): curr_mode
     mode := (curr_mode | mode)
     writereg(core.CTRL_REG1, 1, @mode)
 
-PUB GyroScale(dps): curr_dps
+PUB GyroScale(dps=-2): curr_dps
 ' Set gyro full-scale range, in degrees per second
 '   Valid values: *250, 500, 2000
 '   Any other value polls the chip and returns the current setting
@@ -411,7 +411,7 @@ PUB GyroScale(dps): curr_dps
     dps := ((curr_dps & core.FS_MASK) | dps)
     writereg(core.CTRL_REG4, 1, @dps)
 
-PUB HighPassFilterEnabled(state): curr_state
+PUB HighPassFilterEnabled(state=-2): curr_state
 ' Enable high-pass filter for gyro data, to mitigate long-term drift
 '   Valid values:
 '      *FALSE (0): High-pass filter disabled
@@ -428,7 +428,7 @@ PUB HighPassFilterEnabled(state): curr_state
     state := ((curr_state & core.HPEN_MASK) | state)
     writereg(core.CTRL_REG5, 1, @state)
 
-PUB HighPassFilterFreq(freq): curr_freq
+PUB HighPassFilterFreq(freq=-2): curr_freq
 ' Set high-pass filter frequency, in Hz
 '    Valid values:
 '       if GyroDataRate() == 100:
@@ -443,7 +443,7 @@ PUB HighPassFilterFreq(freq): curr_freq
 '           Examples: 8_00 = 8Hz, 0_50 = 0.5Hz, 0_02 = 0.02Hz
     curr_freq := 0
     readreg(core.CTRL_REG2, 1, @curr_freq)
-    case gyrodatarate(-2)
+    case gyrodatarate()
         100:
             case freq
                 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01:
@@ -451,7 +451,6 @@ PUB HighPassFilterFreq(freq): curr_freq
                 other:
                     curr_freq := (curr_freq >> core.HPCF) & core.HPCF_BITS
                     return lookupz(curr_freq: 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01)
-
         200:
             case freq
                 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02:
@@ -479,7 +478,7 @@ PUB HighPassFilterFreq(freq): curr_freq
     freq := ((curr_freq & core.HPCF_MASK) | freq)
     writereg(core.CTRL_REG2, 1, @freq)
 
-PUB HighPassFilterMode(mode): curr_mode
+PUB HighPassFilterMode(mode=-2): curr_mode
 ' Set data output high pass filter mode
 '   Valid values:
 '      *HPF_NORMAL_RES (0): Normal mode (reset reading HP_RESET_FILTER) XXX - clarify/expand
@@ -498,7 +497,7 @@ PUB HighPassFilterMode(mode): curr_mode
     mode := ((curr_mode & core.HPM_MASK) | mode)
     writereg(core.CTRL_REG2, 1, @mode)
 
-PUB Int1Mask(mask): curr_mask
+PUB Int1Mask(mask=-2): curr_mask
 ' Set interrupt/function mask for INT1 pin
 '   Valid values:
 '       Bits: 1..0
@@ -515,7 +514,7 @@ PUB Int1Mask(mask): curr_mask
     mask := ((curr_mask & core.INT1_MASK) | mask)
     writereg(core.CTRL_REG3, 1, @mask)
 
-PUB Int2Mask(mask): curr_mask
+PUB Int2Mask(mask=-2): curr_mask
 ' Set interrupt/function mask for INT2 pin
 '   Valid values:
 '       Bits: 3..0
@@ -533,7 +532,7 @@ PUB Int2Mask(mask): curr_mask
     mask := ((curr_mask & core.INT2_MASK) | mask)
     writereg(core.CTRL_REG3, 1, @mask)
 
-PUB IntActiveState(state): curr_state
+PUB IntActiveState(state=-2): curr_state
 ' Set active state for interrupts
 '   Valid values: *INTLVL_HIGH (0), INTLVL_LOW (1)
 '   Any other value polls the chip and returns the current setting
@@ -548,7 +547,7 @@ PUB IntActiveState(state): curr_state
     state := ((curr_state & core.H_LACTIVE_MASK) | state)
     writereg(core.CTRL_REG3, 1, @state)
 
-PUB IntOutputType(type): curr_type
+PUB IntOutputType(type=-2): curr_type
 ' Set interrupt pin output type
 '   Valid values:
 '      *INT_PP (0): Push-pull
