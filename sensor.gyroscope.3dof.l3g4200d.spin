@@ -5,7 +5,7 @@
     Description: Driver for the ST L3G4200D 3-axis gyroscope
     Copyright (c) 2022
     Started Nov 27, 2019
-    Updated Mar 29, 2022
+    Updated Mar 30, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -139,7 +139,7 @@ PUB Stop{}
     i2c.deinit{}
 #endif
 
-PUB Defaults{} | tmp
+PUB Defaults{}
 ' Factory default settings
 
     blockupdateenabled(FALSE)
