@@ -502,10 +502,13 @@ PUB HighPassFilterFreq(freq): curr_freq
 PUB HighPassFilterMode(mode): curr_mode
 ' Set data output high pass filter mode
 '   Valid values:
-'      *HPF_NORMAL_RES (0): Normal mode (reset reading HP_RESET_FILTER) XXX - clarify/expand
-'       HPF_REF (1): Reference signal for filtering
-'       HPF_NORMAL (2): Normal
-'       HPF_AUTO_RES (3): Autoreset on interrupt
+'      *HPF_NORMAL_RES (0): Normal mode (HPF is reset by reading the
+'           REFERENCE register) - XXX to be implemented
+'       HPF_REF (1): Output data calculated as the difference between measured
+'           angular rate and contents of the REFERENCE register
+'       HPF_NORMAL (2): Normal mode - same as mode 0
+'       HPF_AUTO_RES (3): Automatically reset when a configured interrupt
+'           occurs
 '   Any other value polls the chip and returns the current setting
     curr_mode := 0
     readreg(core#CTRL_REG2, 1, @curr_mode)
