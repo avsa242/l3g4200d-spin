@@ -580,7 +580,7 @@ PUB TempData(): temp
 '       a relative change in temperature, not an absolute temperature
 '       reading
     readreg(core.OUT_TEMP, 1, @temp)
-    return ~temp
+    return (temp signx 7)
 
 PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 ' Read nr_bytes from device into ptr_buff
