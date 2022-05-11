@@ -24,17 +24,19 @@ P1/SPIN1:
 * P1/SPIN1: 1 extra core/cog for the PASM I2C engine (none if SPIN I2C engine is used)
 _or_
 * P1/SPIN1: 1 extra core/cog for the PASM SPI engine
+* sensor.imu.common.spinh (provided by spin-standard-library)
 
 P2/SPIN2:
 * p2-spin-standard-library
+* sensor.imu.common.spin2h (provided by p2-spin-standard-library)
 
 ## Compiler Compatibility
 
+* P1/SPIN1 FlexSpin (bytecode): OK, tested with 5.9.10-beta
+* P1/SPIN1 FlexSpin (native): OK, tested with 5.9.10-beta
+* ~~P2/SPIN2 FlexSpin (nu-code)~~: FTBFS
+* P2/SPIN2 FlexSpin (native): OK, tested with 5.9.10-beta
 * P1/SPIN1 OpenSpin (bytecode): Untested (deprecated)
-* P1/SPIN1 FlexSpin (bytecode): OK, tested with 5.9.7-beta
-* P1/SPIN1 FlexSpin (native): OK, tested with 5.9.7-beta
-* ~~P2/SPIN2 FlexSpin (nu-code): FTBFS, tested with 5.9.7-beta~~
-* P2/SPIN2 FlexSpin (native): OK, tested with 5.9.7-beta
 * ~~BST~~ (incompatible - no preprocessor)
 * ~~Propeller Tool~~ (incompatible - no preprocessor)
 * ~~PNut~~ (incompatible - no preprocessor)
