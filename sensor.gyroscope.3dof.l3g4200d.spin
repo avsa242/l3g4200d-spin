@@ -5,10 +5,11 @@
     Description: Driver for the ST L3G4200D 3-axis gyroscope
     Copyright (c) 2022
     Started Nov 27, 2019
-    Updated Mar 30, 2022
+    Updated May 11, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
+#include "sensor.imu.common.spinh"
 
 CON
 
@@ -164,6 +165,30 @@ PUB Preset_Active{}
     blockupdateenabled(TRUE)
     int2mask(%1000)
 
+PUB AccelAxisEnabled(axis_mask)
+' Dummy method
+
+PUB AccelBias(x, y, z, rw)
+' Dummy method
+
+PUB AccelData(x, y, z)
+' Dummy method
+
+PUB AccelDataRate(Hz)
+' Dummy method
+
+PUB AccelDataReady{}
+' Dummy method
+
+PUB AccelDataOverrun{}
+' Dummy method
+
+PUB AccelScale(scale)
+' Dummy method
+
+PUB AccelWord2G(accel_word): g
+' dummy method
+
 PUB BlockUpdateEnabled(state): curr_state
 ' Enable block updates
 '   Valid values:
@@ -180,41 +205,6 @@ PUB BlockUpdateEnabled(state): curr_state
 
     state := ((curr_state & core#BDU_MASK) | state)
     writereg(core#CTRL_REG4, 1, @state)
-
-PUB CalibrateGyro{} | axis, orig_scl, orig_dr, biastmp[GYRO_DOF], tmp[GYRO_DOF], samples
-' Calibrate the gyroscope
-    longfill(@axis, 0, 10)                      ' initialize vars to 0
-    orig_scl := gyroscale(-2)                   ' save user's current settings
-    orig_dr := gyrodatarate(-2)
-    gyrobias(0, 0, 0, W)                        ' clear existing bias
-
-    { set sensor to CAL_G_SCL range, CAL_G_DR Hz data rate }
-    gyroscale(CAL_G_SCL)
-    gyrodatarate(CAL_G_DR)
-    gyrobias(0, 0, 0, W)                        ' reset gyroscope bias offsets
-    samples := CAL_G_DR                         ' samples = DR, for 1 sec time
-
-    { throw away first sample set to give time to settle }
-    repeat samples
-        repeat until gyrodataready{}
-        gyrodata(@tmp[X_AXIS], @tmp[Y_AXIS], @tmp[Z_AXIS])
-
-    { accumulate and average approx. 1sec worth of samples }
-    repeat samples
-        repeat until gyrodataready{}
-        gyrodata(@tmp[X_AXIS], @tmp[Y_AXIS], @tmp[Z_AXIS])
-        biastmp[X_AXIS] += tmp[X_AXIS]
-        biastmp[Y_AXIS] += tmp[Y_AXIS]
-        biastmp[Z_AXIS] += tmp[Z_AXIS]
-
-    repeat axis from X_AXIS to Z_AXIS           ' calc avg
-        biastmp[axis] /= samples
-
-    { update offsets }
-    gyrobias(biastmp[X_AXIS], biastmp[Y_AXIS], biastmp[Z_AXIS], W)
-
-    gyroscale(orig_scl)                         ' restore user's settings
-    gyrodatarate(orig_dr)
 
 PUB DataByteOrder(order): curr_ord
 ' Set byte order of gyro data
@@ -339,15 +329,6 @@ PUB GyroDataReady{}: flag
     readreg(core#STATUS_REG, 1, @flag)
     return (((flag >> core#ZYXDA) & 1) == 1)
 
-PUB GyroDPS(ptr_x, ptr_y, ptr_z) | tmp[2]
-' Read gyroscope data, calculated
-'   Returns: Angular rate in micro-degrees per second
-    longfill(@tmp, 0, 2)
-    readreg(core#OUT_X_L, 6, @tmp)
-    long[ptr_x] := ((~~tmp.word[X_AXIS] - _gyro_bias[X_AXIS]) * _gres)
-    long[ptr_y] := ((~~tmp.word[Y_AXIS] - _gyro_bias[Y_AXIS]) * _gres)
-    long[ptr_z] := ((~~tmp.word[Z_AXIS] - _gyro_bias[Z_AXIS]) * _gres)
-
 PUB GyroLowPassFilter(freq): curr_freq
 ' Set gyroscope low-pass filter frequency, in Hz
 '   Valid values:
@@ -430,6 +411,10 @@ PUB GyroScale(dps): curr_dps
 
     dps := ((curr_dps & core#FS_MASK) | dps)
     writereg(core#CTRL_REG4, 1, @dps)
+
+PUB GyroWord2DPS(gyro_word): gyro_dps
+' Convert gyroscope ADC word to degrees per second
+    return (gyro_word * _gres)
 
 PUB HighPassFilterEnabled(state): curr_state
 ' Enable high-pass filter for gyro data, to mitigate long-term drift
@@ -587,6 +572,39 @@ PUB IntOutputType(type): curr_type
 
     type := ((curr_type & core#PP_OD_MASK) | type)
     writereg(core#CTRL_REG3, 1, @type)
+
+PUB MagBias(x, y, z, rw)
+' Dummy method
+
+PUB MagData(x, y, z)
+' Dummy method
+
+PUB MagDataRate(hz)
+' Dummy method
+
+PUB MagDataReady{}
+' Dummy method
+
+PUB MagScale(scale)
+' Dummy method
+
+PUB MagXWord2Gauss(mag_word): mag_gauss
+' dummy method
+
+PUB MagYWord2Gauss(mag_word): mag_gauss
+' dummy method
+
+PUB MagZWord2Gauss(mag_word): mag_gauss
+' dummy method
+
+PUB MagXWord2Tesla(mag_word): mag_tesla
+' dummy method
+
+PUB MagYWord2Tesla(mag_word): mag_tesla
+' dummy method
+
+PUB MagZWord2Tesla(mag_word): mag_tesla
+' dummy method
 
 PUB TempData{}: temp
 ' Read device temperature
