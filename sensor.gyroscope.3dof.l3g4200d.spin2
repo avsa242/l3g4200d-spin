@@ -5,7 +5,7 @@
     Description: Driver for the ST L3G4200D 3-axis gyroscope (P2 version)
     Copyright (c) 2022
     Started May 9, 2021
-    Updated May 11, 2022
+    Updated May 12, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -173,9 +173,6 @@ PUB AccelDataOverrun()
 
 PUB AccelScale(scale=-2)
 ' Dummy method
-
-PUB AccelWord2G(accel_word)
-' dummy method
 
 PUB BlockUpdateEnabled(state=-2): curr_state
 ' Enable block updates
@@ -417,10 +414,6 @@ PUB HighPassFilterEnabled(state=-2): curr_state
     state := ((curr_state & core.HPEN_MASK) | state)
     writereg(core.CTRL_REG5, 1, @state)
 
-PUB GyroWord2DPS(gyro_word): gyro_dps
-' Convert gyroscope ADC word to degrees per second
-    return (gyro_word * _gres)
-
 PUB HighPassFilterFreq(freq=-2): curr_freq
 ' Set high-pass filter frequency, in Hz
 '    Valid values:
@@ -574,24 +567,6 @@ PUB MagDataReady()
 
 PUB MagScale(scale=-2)
 ' Dummy method
-
-PUB MagXWord2Gauss(mag_word)
-' dummy method
-
-PUB MagYWord2Gauss(mag_word)
-' dummy method
-
-PUB MagZWord2Gauss(mag_word)
-' dummy method
-
-PUB MagXWord2Tesla(mag_word)
-' dummy method
-
-PUB MagYWord2Tesla(mag_word)
-' dummy method
-
-PUB MagZWord2Tesla(mag_word)
-' dummy method
 
 PUB TempData(): temp
 ' Read device temperature
