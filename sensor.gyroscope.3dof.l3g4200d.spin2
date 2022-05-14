@@ -1,6 +1,6 @@
 {
     --------------------------------------------
-    Filename: sensor.gyroscope.3dof.l3g4200d.i2cspi.spin2
+    Filename: sensor.gyroscope.3dof.l3g4200d.spin2
     Author: Jesse Burt
     Description: Driver for the ST L3G4200D 3-axis gyroscope (P2 version)
     Copyright (c) 2022
