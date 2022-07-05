@@ -43,10 +43,7 @@ CON
 
 #ifdef L3G4200D_SPI
     MS                  = 1 << 6                ' auto address increment
-#elseifdef L3G4200D_I2C_PASM
-#define L3G4200D_I2C
-    MS                  = 1 << 7                ' auto address increment
-#elseifdef L3G4200D_I2C_SPIN
+#else
 #define L3G4200D_I2C
     MS                  = 1 << 7                ' auto address increment
 #endif
@@ -82,12 +79,10 @@ OBJ
 
 #ifdef L3G4200D_SPI
     spi : "com.spi.4w"                          ' PASM SPI engine (1MHz)
-#elseifdef L3G4200D_I2C_PASM
-    i2c : "com.i2c"                             ' PASM I2C engine (~400kHz)
 #elseifdef L3G4200D_I2C_SPIN
     i2c : "com.i2c.nocog"                       ' SPIN I2C engine (~30kHz)
 #else
-#error "One of L3G4200D_SPI, L3G4200D_I2C_PASM or L3G4200D_I2C_SPIN must be defined"
+    i2c : "com.i2c"                             ' PASM I2C engine (~400kHz)
 #endif
     core: "core.con.l3g4200d"                   ' HW-specific constants
     time: "time"                                ' timekeeping methods
@@ -642,22 +637,24 @@ PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 
 DAT
 {
-    --------------------------------------------------------------------------------------------------------
-    TERMS OF USE: MIT License
+TERMS OF USE: MIT License
 
-    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-    associated documentation files (the "Software"), to deal in the Software without restriction, including
-    without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the
-    following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-    The above copyright notice and this permission notice shall be included in all copies or substantial
-    portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-    LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-    --------------------------------------------------------------------------------------------------------
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 }
+
