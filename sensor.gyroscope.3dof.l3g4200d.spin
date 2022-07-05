@@ -5,7 +5,7 @@
     Description: Driver for the ST L3G4200D 3-axis gyroscope
     Copyright (c) 2022
     Started Nov 27, 2019
-    Updated May 25, 2022
+    Updated Jul 5, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -101,7 +101,7 @@ PUB Startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN): status
     if (lookdown(CS_PIN: 0..31) and lookdown(SCK_PIN: 0..31) and {
 }   lookdown(MOSI_PIN: 0..31) and lookdown(MISO_PIN: 0..31))
         if (status := spi.init(SCK_PIN, MOSI_PIN, MISO_PIN, core#SPI_MODE))
-            longmove(@_CS, @CS_PIN, 4)          ' copy pins to hub vars
+            _CS := CS_PIN
             outa[_CS] := 1
             dira[_CS] := 1
             time.usleep(core#T_POR)             ' wait for device startup
