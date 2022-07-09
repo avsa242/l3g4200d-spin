@@ -24,7 +24,7 @@ CON
     SDA_PIN     = 2                             ' SPI, I2C
     SDO_PIN     = 3                             ' SPI
 
-    I2C_HZ      = 400_000                       ' max is 400_000
+    I2C_FREQ    = 400_000                       ' max is 400_000
 ' --
 
     DAT_X_COL   = 15
@@ -110,12 +110,9 @@ PUB Setup{}
 #ifdef L3G4200D_SPI
     if gyro.startx(CS_PIN, SCL_PIN, SDA_PIN, SDO_PIN)
         ser.strln(string("L3G4200D driver started (SPI)"))
-#elseifdef L3G4200D_I2C_SPIN
-    if gyro.startx(SCL_PIN, SDA_PIN, I2C_HZ)
-        ser.strln(string("L3G4200D driver started (I2C-SPIN)"))
 #else                                           ' default to I2C
-    if gyro.startx(SCL_PIN, SDA_PIN, I2C_HZ)
-        ser.strln(string("L3G4200D driver started (I2C-PASM)"))
+    if gyro.startx(SCL_PIN, SDA_PIN, I2C_FREQ)
+        ser.strln(string("L3G4200D driver started (I2C)"))
 #endif
     else
         ser.strln(string("L3G4200D driver failed to start - halting"))
