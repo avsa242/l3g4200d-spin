@@ -1,11 +1,11 @@
 {
     --------------------------------------------
-    Filename: L3G4200D-Demo.spin
+    Filename: L3G4200D-Demo.spin2
     Author: Jesse Burt
-    Description: L3G4200D driver demo
+    Description: L3G4200D driver demo (P2 version)
         * 3DoF data output
     Copyright (c) 2022
-    Started Jul 11, 2020
+    Started May 9, 2021
     Updated Jul 17, 2022
     See end of file for terms of use.
     --------------------------------------------

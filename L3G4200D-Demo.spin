@@ -5,7 +5,7 @@
     Description: L3G4200D driver demo
         * 3DoF data output
     Copyright (c) 2022
-    Started Jul 11, 2020
+    Started Nov 27, 2019
     Updated Jul 17, 2022
     See end of file for terms of use.
     --------------------------------------------
