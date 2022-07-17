@@ -111,7 +111,7 @@ PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ=DEF_HZ, ADDR_BITS): status
 }   (I2C_HZ <= core.I2C_MAX_FREQ)
         if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
             waitus(core.T_POR)                  ' wait for device startup
-
+            _addr_bits := (ADDR_BITS << 1)
             if (deviceid() == core.DEVID_RESP)   ' validate device
                 return
     { if this point is reached, something above failed }
@@ -595,14 +595,14 @@ PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
     spi.rdblock_lsbf(ptr_buff, nr_bytes)
     pinh(_CS)
 #elseifdef L3G4200D_I2C
-    cmd_pkt.byte[0] := SLAVE_WR
+    cmd_pkt.byte[0] := (SLAVE_WR | _addr_bits)
     cmd_pkt.byte[1] := reg_nr
     i2c.start()
     i2c.wrblock_lsbf(@cmd_pkt, 2)
     i2c.stop()
 
     i2c.start()
-    i2c.write(SLAVE_RD)
+    i2c.write(SLAVE_RD | _addr_bits)
     i2c.rdblock_lsbf(ptr_buff, nr_bytes, i2c.NAK)
     i2c.stop()
 #endif
@@ -620,7 +620,7 @@ PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
     spi.wrblock_lsbf(ptr_buff, nr_bytes)
     pinh(_CS)
 #elseifdef L3G4200D_I2C
-    cmd_pkt.byte[0] := SLAVE_WR
+    cmd_pkt.byte[0] := (SLAVE_WR | _addr_bits)
     cmd_pkt.byte[1] := reg_nr
     i2c.start()
     i2c.wrblock_lsbf(@cmd_pkt, 2)
