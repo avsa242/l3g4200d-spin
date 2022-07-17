@@ -5,7 +5,7 @@
     Description: Driver for the ST L3G4200D 3-axis gyroscope
     Copyright (c) 2022
     Started Nov 27, 2019
-    Updated Jul 9, 2022
+    Updated Jul 17, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -71,9 +71,7 @@ CON
 
 VAR
 
-    long _gres
     long _CS
-    long _gyro_bias[GYRO_DOF]
 
 OBJ
 
@@ -279,19 +277,19 @@ PUB GyroBias(x, y, z, rw)
 '       variables to hold the returned calibration offset values.
     case rw
         R:
-            longmove(x, @_gyro_bias[0], 3)
+            longmove(x, @_gbias[0], 3)
         W:
             case x
                 -32768..32767:
-                    _gyro_bias[X_AXIS] := x
+                    _gbias[X_AXIS] := x
                 other:
             case y
                 -32768..32767:
-                    _gyro_bias[Y_AXIS] := y
+                    _gbias[Y_AXIS] := y
                 other:
             case z
                 -32768..32767:
-                    _gyro_bias[Z_AXIS] := z
+                    _gbias[Z_AXIS] := z
                 other:
 
 PUB GyroData(ptr_x, ptr_y, ptr_z) | tmp[2]
@@ -299,9 +297,9 @@ PUB GyroData(ptr_x, ptr_y, ptr_z) | tmp[2]
     bytefill(@tmp, 0, 8)
     readreg(core#OUT_X_L, 6, @tmp)
 
-    long[ptr_x] := (~~tmp.word[X_AXIS] - _gyro_bias[X_AXIS])
-    long[ptr_y] := (~~tmp.word[Y_AXIS] - _gyro_bias[Y_AXIS])
-    long[ptr_z] := (~~tmp.word[Z_AXIS] - _gyro_bias[Z_AXIS])
+    long[ptr_x] := (~~tmp.word[X_AXIS] - _gbias[X_AXIS])
+    long[ptr_y] := (~~tmp.word[Y_AXIS] - _gbias[Y_AXIS])
+    long[ptr_z] := (~~tmp.word[Z_AXIS] - _gbias[Z_AXIS])
 
 PUB GyroDataOverrun{}: flag
 ' Flag indicating previously acquired data has been overwritten

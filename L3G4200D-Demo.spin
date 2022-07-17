@@ -20,8 +20,8 @@ CON
     SER_BAUD    = 115_200
 
     CS_PIN      = 0                             ' SPI
-    SCL_PIN     = 1                             ' SPI, I2C
-    SDA_PIN     = 2                             ' SPI, I2C
+    SCL_PIN     = 28'1                             ' SPI, I2C
+    SDA_PIN     = 29'2                             ' SPI, I2C
     SDO_PIN     = 3                             ' SPI
 
     I2C_FREQ    = 400_000                       ' max is 400_000
