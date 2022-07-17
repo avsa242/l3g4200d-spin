@@ -5,7 +5,7 @@
     Description: Driver for the ST L3G4200D 3-axis gyroscope (P2 version)
     Copyright (c) 2022
     Started May 9, 2021
-    Updated Jul 17, 2022
+    Updated Jul 9, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -105,7 +105,7 @@ PUB Startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN, SPI_HZ=1_000_000): status
     { Lastly - make sure you have at least one free core/cog }
     return FALSE
 #elseifdef L3G4200D_I2C
-PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ=DEF_HZ): status
+PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ=DEF_HZ, ADDR_BITS): status
 ' Start using custom I/O settings and bus speed
     if lookdown(SCL_PIN: 0..63) and lookdown(SDA_PIN: 0..63) and {
 }   (I2C_HZ <= core.I2C_MAX_FREQ)
@@ -278,8 +278,9 @@ PUB GyroBias(x, y, z, rw=R)
 PUB GyroData(ptr_x, ptr_y, ptr_z) | tmp[2]
 ' Read gyroscope data
     bytefill(@tmp, 0, 8)
-    readreg(core.OUT_X_L, 6, @tmp)
-
+    readreg(core.OUT_X_L, 2, @tmp.word[X_AXIS])
+    readreg(core.OUT_Y_L, 2, @tmp.word[Y_AXIS])
+    readreg(core.OUT_Z_L, 2, @tmp.word[Z_AXIS])
     long[ptr_x] := ( (tmp.word[X_AXIS] signx 15) - _gbias[X_AXIS])
     long[ptr_y] := ( (tmp.word[Y_AXIS] signx 15) - _gbias[Y_AXIS])
     long[ptr_z] := ( (tmp.word[Z_AXIS] signx 15) - _gbias[Z_AXIS])

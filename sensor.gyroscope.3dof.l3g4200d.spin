@@ -20,6 +20,7 @@ CON
     DEF_SCL             = 28
     DEF_SDA             = 29
     DEF_HZ              = 100_000
+    DEF_ADDR            = 0
     I2C_MAX_FREQ        = core#I2C_MAX_FREQ
 
 { Indicate to user apps how many Degrees of Freedom each sub-sensor has }
@@ -121,9 +122,9 @@ PUB Startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN): status
 #elseifdef L3G4200D_I2C
 PUB Start{}: status
 ' Start using "standard" Propeller I2C pins, and 100kHz bus speed
-    return startx(DEF_SCL, DEF_SDA, DEF_HZ)
+    return startx(DEF_SCL, DEF_SDA, DEF_HZ, DEF_ADDR)
 
-PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ): status
+PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ, ADDR_BITS): status
 ' Start using custom I/O settings and bus speed
     if (lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) and {
 }   (I2C_HZ =< core#I2C_MAX_FREQ))
