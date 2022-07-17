@@ -12,9 +12,7 @@
 
     Build-time symbols supported by driver:
         -DL3G4200D_SPI
-        -DL3G4200D_SPI_BC
         -DL3G4200D_I2C (default if none specified)
-        -DL3G4200D_I2C_BC
 }
 CON
 
