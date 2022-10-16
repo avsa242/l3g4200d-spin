@@ -6,7 +6,7 @@
         * 3DoF data output
     Copyright (c) 2022
     Started Nov 27, 2019
-    Updated Oct 1, 2022
+    Updated Oct 16, 2022
     See end of file for terms of use.
     --------------------------------------------
 
@@ -39,8 +39,8 @@ CON
 
 OBJ
 
-    cfg: "core.con.boardcfg.flip"
-    gyro: "sensor.gyroscope.3dof.l3g4200d"
+    cfg: "boardcfg.flip"
+    sensor: "sensor.gyroscope.3dof.l3g4200d"
     ser: "com.serial.terminal.ansi"
     time: "time"
 
@@ -52,16 +52,16 @@ PUB Setup{}
     ser.strln(string("Serial terminal started"))
 
 #ifdef L3G4200D_SPI
-    if (gyro.startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN))
+    if (sensor.startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN))
 #else
-    if (gyro.startx(SCL_PIN, SDA_PIN, I2C_FREQ, ADDR_BITS))
+    if (sensor.startx(SCL_PIN, SDA_PIN, I2C_FREQ, ADDR_BITS))
 #endif
         ser.strln(string("L3G4200D driver started"))
     else
         ser.strln(string("L3G4200D driver failed to start - halting"))
         repeat
 
-    gyro.preset_active{}
+    sensor.preset_active{}
 
     repeat
         ser.position(0, 3)
