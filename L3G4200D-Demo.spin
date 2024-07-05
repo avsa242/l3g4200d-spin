@@ -1,80 +1,73 @@
 {
-    --------------------------------------------
-    Filename: L3G4200D-Demo.spin
-    Author: Jesse Burt
-    Description: L3G4200D driver demo
+----------------------------------------------------------------------------------------------------
+    Filename:       L3G4200D-Demo.spin
+    Description:    Demo of the L3G4200D driver
         * 3DoF data output
-    Copyright (c) 2022
-    Started Nov 27, 2019
-    Updated Nov 20, 2022
-    See end of file for terms of use.
-    --------------------------------------------
-
-    Build-time symbols supported by driver:
-        -DL3G4200D_SPI
-        -DL3G4200D_SPI_BC
-        -DL3G4200D_I2C (default if none specified)
-        -DL3G4200D_I2C_BC
+    Author:         Jesse Burt
+    Started:        Nov 27, 2019
+    Updated:        Jul 5, 2024
+    Copyright (c) 2024 - See end of file for terms of use.
+----------------------------------------------------------------------------------------------------
 }
+' Uncomment one of the pairs of lines below for alternate connectivity options.
+' The default if nothing is specified, is a PASM-based I2C engine
+' NOTE: If using I2C, the SDA and SDO pins must be connected together, and CS should be tied high.
+
+' Uncomment the two lines below to use SPI
+'#define L3G4200D_SPI
+'#pragma exportdef(L3G4200D_SPI)
+
+' Uncomment the two lines below to use SPI (bytecode-based engine)
+'#define L3G4200D_SPI_BC
+'#pragma exportdef(L3G4200D_SPI_BC)
+
+' Uncomment the two lines below to use I2C (bytecode-based engine)
+'#define L3G4200D_I2C_BC
+'#pragma exportdef(L3G4200D_I2C_BC)
+
+
 CON
 
-    _clkmode    = cfg#_clkmode
-    _xinfreq    = cfg#_xinfreq
+    _clkmode    = cfg._clkmode
+    _xinfreq    = cfg._xinfreq
 
-' -- User-modifiable constants
-    SER_BAUD    = 115_200
-
-    { I2C configuration }
-    SCL_PIN     = 28
-    SDA_PIN     = 29
-    I2C_FREQ    = 400_000                       ' max is 400_000
-    ADDR_BITS   = 0                             ' 0, 1
-    ' NOTE: To use I2C, electrically connect the SDA and SDO pins together
-
-    { SPI configuration }
-    CS_PIN      = 0                             ' Datasheet equivalent naming:
-    SCK_PIN     = 1                             ' SCL/SPC
-    MOSI_PIN    = 2                             ' SDA/SDI/SDO
-    MISO_PIN    = 3                             ' SDO
-' --
 
 OBJ
 
-    cfg: "boardcfg.flip"
-    sensor: "sensor.gyroscope.3dof.l3g4200d"
-    ser: "com.serial.terminal.ansi"
-    time: "time"
+    cfg:    "boardcfg.flip"
+    time:   "time"
+    ser:    "com.serial.terminal.ansi" | SER_BAUD=115_200
+    sensor: "sensor.gyroscope.3dof.l3g4200d" | {I2C} SCL=28, SDA=29, I2C_FREQ=400_000, ...
+                                            {SPI} CS=0, SCK=1, MOSI=2, MISO=3
 
-PUB setup{}
 
-    ser.start(SER_BAUD)
-    time.msleep(10)
-    ser.clear{}
-    ser.strln(string("Serial terminal started"))
+PUB setup()
 
-#ifdef L3G4200D_SPI
-    if (sensor.startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN))
-#else
-    if (sensor.startx(SCL_PIN, SDA_PIN, I2C_FREQ, ADDR_BITS))
-#endif
-        ser.strln(string("L3G4200D driver started"))
+    ser.start()
+    time.msleep(30)
+    ser.clear()
+    ser.strln(@"Serial terminal started")
+
+    if ( sensor.start() )
+        ser.strln(@"L3G4200D driver started")
     else
-        ser.strln(string("L3G4200D driver failed to start - halting"))
+        ser.strln(@"L3G4200D driver failed to start - halting")
         repeat
 
-    sensor.preset_active{}
+    sensor.preset_active()
 
     repeat
         ser.pos_xy(0, 3)
-            show_gyro_data{}
-            if (ser.rx_check{} == "c")
-                cal_gyro{}
+            show_gyro_data()
+            if ( ser.getchar_noblock() == "c" )
+                cal_gyro()
 
-#include "gyrodemo.common.spinh"                ' code common to all IMU demos
+#include "gyrodemo.common.spinh"                ' use code common to all gyro demos
+
 
 DAT
 {
-Copyright 2022 Jesse Burt
+Copyright 2024 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
