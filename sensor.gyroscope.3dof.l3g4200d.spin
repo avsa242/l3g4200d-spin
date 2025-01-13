@@ -4,7 +4,7 @@
     Description:    Driver for the ST L3G4200D 3-axis gyroscope
     Author:         Jesse Burt
     Started:        Nov 27, 2019
-    Updated:        Jul 5, 2024
+    Updated:        Jan 13, 2025
     Copyright (c) 2024 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
@@ -14,9 +14,9 @@
 ' if the bytecode-based SPI engine is requested, make sure SPI-related code in the driver
 '    is enabled
 #ifdef L3G4200D_SPI_BC
-#   ifndef L3G4200D_SPI
-#       define L3G4200D_SPI
-#   endif
+# ifndef L3G4200D_SPI
+#  define L3G4200D_SPI
+# endif
 #endif
 
 CON
@@ -102,21 +102,20 @@ OBJ
 { SPI? }
 #ifdef L3G4200D_SPI
 { decide: Bytecode SPI engine, or PASM? Default is PASM if BC isn't specified }
-#   ifdef L3G4200D_SPI_BC
-        spi:    "com.spi.25khz.nocog"           ' BC SPI engine
-#   else
-        spi:    "com.spi.1mhz"                  ' PASM SPI engine
-#   endif
+# ifdef L3G4200D_SPI_BC
+    spi:    "com.spi.25khz.nocog"               ' BC SPI engine
+# else
+    spi:    "com.spi.1mhz"                      ' PASM SPI engine
+# endif
 #else
 { no, not SPI - default to I2C }
-#   define L3G4200D_I2C
+# define L3G4200D_I2C
 { decide: Bytecode I2C engine, or PASM? Default is PASM if BC isn't specified }
-#   ifdef L3G4200D_I2C_BC
-        i2c:    "com.i2c.nocog"                 ' BC I2C engine
-#   else
-        i2c:    "com.i2c"                       ' PASM I2C engine
-#   endif
-
+# ifdef L3G4200D_I2C_BC
+    i2c:    "com.i2c.nocog"                     ' BC I2C engine
+# else
+    i2c:    "com.i2c"                           ' PASM I2C engine
+# endif
 #endif
     core:   "core.con.l3g4200d"                 ' HW-specific constants
     time:   "time"                              ' timekeeping methods
@@ -141,7 +140,10 @@ PUB startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN, SPI_HZ=1_000_000): status
             outa[_CS] := 1
             dira[_CS] := 1
             time.usleep(core.T_POR)             ' wait for device startup
-
+            if ( MOSI_PIN == MISO_PIN )
+                spi_mode(3)
+            else
+                spi_mode(4)
             if ( dev_id() == core.DEVID_RESP )  ' verify communication with device
                 return
     { if this point is reached, something above failed }
@@ -631,6 +633,19 @@ PRI readreg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 #endif
 
 
+PRI spi_mode(m) | tmp
+' Set SPI mode
+'   m:  3 (3-wire mode), 4 (4-wire mode)
+    tmp := 0
+    readreg(core.CTRL_REG4, 1, @tmp)
+    if ( m == 3 )
+        tmp := (tmp | core.SPI_3W)
+    elseif ( m == 4 )
+        tmp &= core.SIM_MASK
+
+    writereg(core.CTRL_REG4, 1, @tmp)
+
+
 PRI writereg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 ' Write nr_bytes to device from ptr_buff
     case reg_nr
@@ -655,7 +670,7 @@ PRI writereg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 
 DAT
 {
-Copyright 2024 Jesse Burt
+Copyright 2025 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

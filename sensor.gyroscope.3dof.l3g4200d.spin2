@@ -1,11 +1,11 @@
 {
 ----------------------------------------------------------------------------------------------------
-    Filename:       sensor.gyroscope.3dof.l3g4200d.spin
+    Filename:       sensor.gyroscope.3dof.l3g4200d.spin2
     Description:    Driver for the ST L3G4200D 3-axis gyroscope
     Author:         Jesse Burt
     Started:        May 9, 2021
-    Updated:        Jul 5, 2024
-    Copyright (c) 2024 - See end of file for terms of use.
+    Updated:        Jan 13, 2025
+    Copyright (c) 2025 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
 
@@ -96,10 +96,10 @@ OBJ
     spi:    "com.spi.10mhz"                     ' SPI engine
 #else
 { no, not SPI - default to I2C }
-#   define L3G4200D_I2C
-        i2c:    "com.i2c"                       ' I2C engine
+#define L3G4200D_I2C
+    i2c:    "com.i2c"                           ' I2C engine
 #endif
-    core: "core.con.l3g4200d"                   ' HW-specific constants
+    core:   "core.con.l3g4200d"                 ' HW-specific constants
 
 
 PUB null()
@@ -121,7 +121,10 @@ PUB startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN, SPI_HZ=1_000_000): status
             _CS := CS_PIN                       ' copy pins to hub vars
             pinh(_CS)
             waitus(core.T_POR)                  ' wait for device startup
-
+            if ( MOSI_PIN == MISO_PIN )
+                spi_mode(3)
+            else
+                spi_mode(4)
             if ( dev_id() == core.DEVID_RESP )  ' verify communication with device
                 return
     { if this point is reached, something above failed }
@@ -612,6 +615,19 @@ PRI readreg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 #endif
 
 
+PRI spi_mode(m) | tmp
+' Set SPI mode
+'   m:  3 (3-wire mode), 4 (4-wire mode)
+    tmp := 0
+    readreg(core.CTRL_REG4, 1, @tmp)
+    if ( m == 3 )
+        tmp := (tmp | core.SPI_3W)
+    elseif ( m == 4 )
+        tmp &= core.SIM_MASK
+
+    writereg(core.CTRL_REG4, 1, @tmp)
+
+
 PRI writereg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 ' Write nr_bytes to device from ptr_buff
     case reg_nr
@@ -636,7 +652,7 @@ PRI writereg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 
 DAT
 {
-Copyright 2024 Jesse Burt
+Copyright 2025 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

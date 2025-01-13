@@ -1,13 +1,12 @@
 {
-    --------------------------------------------
-    Filename: core.con.l3g4200d.spin
-    Author: Jesse Burt
-    Description: L3G4200D-specific constants
-    Copyright (c) 2021
-    Started Nov 27, 2019
-    Updated May 4, 2021
-    See end of file for terms of use.
-    --------------------------------------------
+----------------------------------------------------------------------------------------------------
+    Filename:       core.con.l3g4200d.spin
+    Description:    L3G4200D-specific constants
+    Author:         Jesse Burt
+    Started:        Nov 27, 2019
+    Updated:        Jan 13, 2025
+    Copyright (c) 2025 - See end of file for terms of use.
+----------------------------------------------------------------------------------------------------
 }
 
 CON
@@ -93,6 +92,7 @@ CON
         FS_MASK                 = (FS_BITS << FS) ^ CTRL_REG4_MASK
         ST_MASK                 = (ST_BITS << ST) ^ CTRL_REG4_MASK
         SIM_MASK                = 1 ^ CTRL_REG4_MASK
+        SPI_3W                  = 1 << SIM
 
     CTRL_REG5                   = $24
     CTRL_REG5_MASK              = $DF
@@ -159,12 +159,13 @@ CON
         D_MASK                  = D_BITS ^ INT1_DURATION_MASK
 
 
-PUB null{}
+PUB null()
 ' This is not a top-level object
+
 
 DAT
 {
-Copyright 2022 Jesse Burt
+Copyright 2024 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

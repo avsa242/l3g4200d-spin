@@ -8,7 +8,8 @@ This is a P8X32A/Propeller driver object for the STMicroelectronics L3G4200D 3Do
 
 ## Salient Features
 
-* I2C connection at ~30kHz (P1: SPIN I2C) 400kHz (P1: PASM I2C, P2), SPI connection at up to 1MHz
+* I2C connection at ~30kHz (P1: SPIN I2C) 400kHz (P1: PASM I2C, P2)
+* SPI connection (3 or 4-wire) at up to 1MHz
 * Optional alternate I2C address
 * Read Gyroscope data (raw, or calculated in micro-degrees per second)
 * Read flags for data ready or overrun
@@ -46,5 +47,5 @@ P2/SPIN2:
 
 ## Limitations
 
-* Very early in development - may malfunction, or outright fail to build
+* TBD
 
