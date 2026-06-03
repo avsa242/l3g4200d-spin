@@ -4,8 +4,8 @@
     Description:    Driver for the ST L3G4200D 3-axis gyroscope
     Author:         Jesse Burt
     Started:        Nov 27, 2019
-    Updated:        Jan 13, 2025
-    Copyright (c) 2024 - See end of file for terms of use.
+    Updated:        Jun 3, 2026
+    Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
 
@@ -83,12 +83,6 @@ CON
     { I2C settings }
     SLAVE_WR            = core.SLAVE_ADDR
     SLAVE_RD            = core.SLAVE_ADDR|1
-
-    DEF_SCL             = 28
-    DEF_SDA             = 29
-    DEF_HZ              = 100_000
-    DEF_ADDR            = 0
-    I2C_MAX_FREQ        = core.I2C_MAX_FREQ
 
 
 VAR
@@ -217,9 +211,9 @@ PUB blk_updt_ena(state=-2): curr_state
 '   Any other value polls the chip and returns the current setting
     curr_state := 0
     readreg(core.CTRL_REG4, 1, @curr_state)
-    case ||(state)
+    case abs(state)
         0, 1:
-            state := (||(state) & 1) << core.BDU
+            state := (abs(state) & 1) << core.BDU
             state := ((curr_state & core.BDU_MASK) | state)
             writereg(core.CTRL_REG4, 1, @state)
         other:
@@ -259,9 +253,9 @@ PUB fifo_ena(state=-2): curr_state
 '   Any other value polls the chip and returns the current setting
     curr_state := 0
     readreg(core.CTRL_REG5, 1, @curr_state)
-    case ||(state)
+    case abs(state)
         0, 1:
-            state := (||(state) & 1) << core.FIFO_EN
+            state := (abs(state) & 1) << core.FIFO_EN
             state := ((curr_state & core.FIFO_EN_MASK) | state)
             writereg(core.CTRL_REG5, 1, @state)
         other:
@@ -341,9 +335,9 @@ PUB gyro_hpf_ena(state=-2): curr_state
 '   Any other value polls the chip and returns the current setting
     curr_state := 0
     readreg(core.CTRL_REG5, 1, @curr_state)
-    case ||(state)
+    case abs(state)
         0, 1:
-            state := (||(state) & 1) << core.HPEN
+            state := (abs(state) & 1) << core.HPEN
             state := ((curr_state & core.HPEN_MASK) | state)
             writereg(core.CTRL_REG5, 1, @state)
         other:
@@ -670,7 +664,7 @@ PRI writereg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 
 DAT
 {
-Copyright 2025 Jesse Burt
+Copyright 2026 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

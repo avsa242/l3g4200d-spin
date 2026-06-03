@@ -5,8 +5,8 @@
         * 3DoF data output
     Author:         Jesse Burt
     Started:        Nov 27, 2019
-    Updated:        Jan 14, 2025
-    Copyright (c) 2024 - See end of file for terms of use.
+    Updated:        Jun 3, 2026
+    Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
 ' Uncomment one of the pairs of lines below for alternate connectivity options.
@@ -28,17 +28,16 @@
 
 CON
 
-    _clkmode    = cfg._clkmode
-    _xinfreq    = cfg._xinfreq
+    _clkmode    = xtal1+pll16x
+    _xinfreq    = 5_000_000
 
 
 OBJ
 
-    cfg:    "boardcfg.flip"
-    time:   "time"
     ser:    "com.serial.terminal.ansi" | SER_BAUD=115_200
     sensor: "sensor.gyroscope.3dof.l3g4200d" | {I2C} SCL=28, SDA=29, I2C_FREQ=400_000, ...
                                             {SPI} CS=0, SCK=1, MOSI=2, MISO=3
+    time:   "time"
 
 
 PUB main() | axis, g[3], sign
@@ -58,8 +57,8 @@ PUB main() | axis, g[3], sign
             else
                 sign := " "
             ser.printf(@"%c%d.%06.6d     ", sign, ...
-                                            ||(g[axis] / 1_000_000), ...
-                                            ||(g[axis] // 1_000_000) )
+                                            abs(g[axis] / 1_000_000), ...
+                                            abs(g[axis] // 1_000_000) )
         if ( ser.getchar_noblock() == "c" )
             cal_gyro()
 
@@ -91,7 +90,7 @@ PUB setup()
 
 DAT
 {
-Copyright 2025 Jesse Burt
+Copyright 2026 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

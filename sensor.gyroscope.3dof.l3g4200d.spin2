@@ -4,8 +4,8 @@
     Description:    Driver for the ST L3G4200D 3-axis gyroscope
     Author:         Jesse Burt
     Started:        May 9, 2021
-    Updated:        Jan 13, 2025
-    Copyright (c) 2025 - See end of file for terms of use.
+    Updated:        Jun 3, 2026
+    Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
 
@@ -76,12 +76,6 @@ CON
     SLAVE_WR            = core.SLAVE_ADDR
     SLAVE_RD            = core.SLAVE_ADDR|1
 
-    DEF_SCL             = 0
-    DEF_SDA             = 1
-    DEF_HZ              = 100_000
-    DEF_ADDR            = 0
-    I2C_MAX_FREQ        = core.I2C_MAX_FREQ
-
 
 VAR
 
@@ -96,7 +90,7 @@ OBJ
     spi:    "com.spi.10mhz"                     ' SPI engine
 #else
 { no, not SPI - default to I2C }
-#define L3G4200D_I2C
+# define L3G4200D_I2C
     i2c:    "com.i2c"                           ' I2C engine
 #endif
     core:   "core.con.l3g4200d"                 ' HW-specific constants
@@ -652,7 +646,7 @@ PRI writereg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 
 DAT
 {
-Copyright 2025 Jesse Burt
+Copyright 2026 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
