@@ -4,7 +4,7 @@
     Description:    Driver for the ST L3G4200D 3-axis gyroscope
     Author:         Jesse Burt
     Started:        Nov 27, 2019
-    Updated:        Jun 3, 2026
+    Updated:        Jun 4, 2026
     Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
@@ -492,21 +492,25 @@ PUB gyro_opmode(mode=-2): curr_mode
     writereg(core.CTRL_REG1, 1, @mode)
 
 
-PUB gyro_scale(dps=-2): curr_dps
+PUB gyro_scale(s=-2): c
 ' Set gyro full-scale range, in degrees per second
 '   Valid values: *250, 500, 2000
 '   Any other value polls the chip and returns the current setting
-    curr_dps := 0
-    readreg(core.CTRL_REG4, 1, @curr_dps)
-    case dps
+    c := 0
+    readreg(core.CTRL_REG4, 1, @c)
+    case s
         250, 500, 2000:
-            dps := lookdownz(dps: 250, 500, 2000) << core.FS
-            _gres := lookupz(dps >> core.FS: 8_750, 17_500, 70_000)
-            dps := ((curr_dps & core.FS_MASK) | dps)
-            writereg(core.CTRL_REG4, 1, @dps)
+            s := lookdownz(s: 250, 500, 2000)
+            ' set scaling factors for degrees per second and radians per second:
+            _gres := lookupz(s: 8_750, 17_500, 70_000)
+            _gres_rads_sec := lookupz(s: 0_152, 0_305, 1_221)
+'            _gres_dps_f := lookupz(s: 0.00875, 0.0175, 0.07)
+'            _gres_rads_sec_f := lookupz(s: 0.000152716, 0.000305432, 0.001221730)
+            s := ((c & core.FS_MASK) | (s << core.FS) )
+            writereg(core.CTRL_REG4, 1, @s)
         other:
-            curr_dps := (curr_dps >> core.FS) & core.FS_BITS
-            return lookupz(curr_dps: 250, 500, 2000)
+            c := (c >> core.FS) & core.FS_BITS
+            return lookupz(c: 250, 500, 2000)
 
 
 PUB gyro_set_bias(x, y, z)
